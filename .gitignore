@@ -128,3 +128,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# config files, user data and provider-specific info
+config.js
+userdata.json
+servers.json
+*.sh
+favicons/
