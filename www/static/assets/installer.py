@@ -2,6 +2,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# compile on linux with `sudo wine pyinstaller --onefile installer.py`
+# cant run properly in wine!!
 import os
 import sys
 from sys import exit
