@@ -1,0 +1,161 @@
+:root {
+    --max-width: 900px;
+    --max-height: 600px;
+    --max-window-width: calc(var(--max-width) - var(--margin-large));
+    --max-window-height: calc(var(--max-height) - var(--margin-normal-large)*3);
+
+    --margin-small: 5px;
+    --margin-normal: 10px;
+    --margin-normal-large: 15px;
+    --margin-large: 20px;
+    --margin-large-extra: 40px;
+
+    --background-content: lightgrey;
+
+    --color-link: darkslateblue;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    background: url("/wallpaper.jpg"), rgba(0,0,0,0.2);
+    background-blend-mode: multiply;
+    backdrop-filter: blur(1.5px);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    font-family: 'Courier New', Courier, monospace;
+}
+code, kbd {
+    background-color: rgba(0,0,0,0.1);
+    padding: 3px;
+}
+code {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    word-break: break-all;
+}
+.button {
+    background-color: rgb(221, 221, 221);
+    padding: 5px 10px;
+    border-radius: var(--margin-small);
+    display: inline-block;
+    width: fit-content;
+    height: 16px;
+    font-size: 15px;
+    box-shadow: 0 0 2px black;
+    text-decoration: none;
+    color: black;
+}
+.button:hover {
+    background-color: darkgrey;
+}
+.disabledbutton {
+    background-color: darkgrey;
+    padding: 5px 10px;
+    border-radius: var(--margin-small);
+    display: inline-block;
+    width: fit-content;
+    height: 16px;
+    font-size: 15px;
+    box-shadow: inset 0 0 2px black;
+    text-decoration: none;
+    color: black;
+    cursor: default;
+}
+
+header {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: rgba(119, 136, 153, 0.9);
+    align-items: flex-start;
+    height: fit-content;
+    max-width: var(--max-width);
+    width: 100%;
+    margin: 0 auto;
+    border-bottom-left-radius: var(--margin-normal);
+    border-bottom-right-radius: var(--margin-normal);
+    overflow: hidden;
+}
+header > nav {
+    height: 100%;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+header > nav > a {
+    all: initial;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    min-width: 4em;
+    margin: 0;
+    height: 100%;
+    line-height: 25px;
+}
+header > nav > a:hover {
+    background-color: rgba(0,0,0,0.1);
+}
+header > img {
+    height: 25px;
+    margin-right: auto;
+}
+
+.main {
+    max-width: var(--max-width);
+    width: 100%;
+    max-height: var(--max-height);
+    height: max-content;
+    margin: 10px auto 0;
+    background-color: rgba(0,0,0,0.5);
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+    box-sizing: border-box;
+}
+
+.extensions {
+    width: 100%;
+    height: 25px;
+    display: flex;
+}
+.extensions > a {
+    background-color: gray;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    height: 25px;
+    font-size: 15px;
+    box-shadow: inset 0 0 2px black;
+    border-radius: var(--margin-small);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    color: black;
+    text-decoration: none;
+}
+.extensions > a:hover {
+    background-color: darkgrey;
+    color: black;
+    text-decoration: none;
+}
+.extensions .selected {
+    background-color: var(--background-content) !important;
+    box-shadow: none;
+}
+
+.content {
+    max-height: var(--max-window-height);
+    max-width: var(--max-window-width);
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--background-content);
+    border-bottom-left-radius: var(--margin-small);
+    padding-left: var(--margin-normal);
+    box-sizing: border-box;
+}

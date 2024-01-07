@@ -1,0 +1,52 @@
+<h1>Install guide for Android.</h1>
+<h2>Disclaimers</h2>
+<p>
+    Compatible with Android versions >= 5.0.
+</p>
+<p>
+    Please open this page on the device itself for easier installation.
+</p>
+<h2>Installation</h2>
+<p>
+    First off, install <a href="https://play.google.com/store/apps/details?id=com.wireguard.android">WireGuard</a> on the device.
+</p>
+<p>
+    After installation you will need to download the config file below directly to the device, or to a PC. <b>This file can only be opened once, so avoid opening it on the wrong device!</b>
+</p>
+<a href="/profile/getconf?{{uuid}}">keuknet.conf</a>
+<h3>Directly on device</h3>
+<p>
+    If you have downloaded it directly to the device,<br>
+    open the WireGuard app,<br>
+    click on the <b><kbd>+</kbd></b> icon<br>
+    and select <kbd>Import from file or archive</kbd>.<br>
+    Then select the config file you downloaded.
+</p>
+<h3>Using a PC</h3>
+<p>
+    If you instead have it on a PC,<br>
+    open the file with NotePad,<br>
+    then open the WireGuard app,<br>
+    click on the <b><kbd>+</kbd></b> icon<br>
+    and select <kbd>Create from scratch</kbd>.<br>
+    Under <kbd>Interface</kbd> enter as name KeukNet,<br>
+    then proceed to enter the rest of the information specified under <code>[Interface]</code>.<br>
+    After that click on <kbd>Add peer</kbd> below the <kbd>Interface</kbd> box,<br>
+    then proceed to enter the information under <code>[Peer]</code> at the <kbd>Peer</kbd> box.
+</p>
+<p>
+    note: Empty fields don't matter, they will auto-fill after first connection.
+</p>
+<p>
+    Now click the <kbd>Save</kbd> icon in the top right corner, this should return you to the main screen.
+</p>
+<h3>Usage</h3>
+<p>
+    Now you are all set to connect to KeukNet on your Android device. Anytime you want to connect just open the WireGuard app, tap the slider on the right side once to connect, and again after you are done to disconnect.
+</p>
+<p>
+    This concludes the installation.
+</p>
+<p>
+    Click <a href="/">here</a> to return to your account page.
+</p>

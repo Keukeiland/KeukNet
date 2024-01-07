@@ -3,131 +3,144 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-// import libraries
+// import http servers
 const http2 = require('http2')
 const http = require('http')
 
-// import local scripts
-const fetch = require('./modules/fetch')
-
-// import index of request processor
-const processor_index = require('./web/index')
-
 // import config values
-const {domain, http_port, https_port, host} = require('./config')
+const {
+    domain, http_port, https_port,
+    host, salt, private_key_path,
+    server_cert_path, ca_cert_path
+} = require('./config/config')
+const wg_config = require('./config/wireguard')
 
-// fetch HTTPS encryption keys from filesystem
-// then set keysFetched true so HTTPS server can start
-var keysFetched
-fetch.keys(function(key, crt, ca_crt) {
-    serverkey = key
-    servercrt = crt
-    cacrt = ca_crt
-    keysFetched = true
+// set up global context
+const global = require('./global')
+global.salt = salt
+const {fetch, data, log} = global
+
+// set up request handler
+const handle = require('./www/index')
+handle.init(Object.freeze(global))
+
+// set up modules
+fetch.init(`${__dirname}/www/static/`)
+log.status("Initializing database")
+data.init(`${__dirname}/data/`, salt, wg_config, function () {
+    log.status("Database initialized")
 })
 
+// fetch https encryption keys
+log.status("Fetching encryption keys")
+let keysFetched = 0
+fetch.key(private_key_path, function(data, err) {
+    if (err) log.err("Failed fetching private key")
+    private_key = data
+    keysFetched += 1
+})
+fetch.key(server_cert_path, function(data, err) {
+    if (err) log.err("Failed fetching server certificate")
+    server_cert = data
+    keysFetched += 1
+})
+fetch.key(ca_cert_path, function(data, err) {
+    if (err) log.err("Failed fetching CA certificate")
+    ca_cert = data
+    keysFetched += 1
+})
 
 // handle all requests for both HTTPS and HTTP/2
 const requestListener = function (req, res) {
+    req.headers.host = domain
+    
     // if no authorization headers set it to false, to prevent errors
     req.headers.authorization ??= false
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
     req.headers.host ??= req.headers[':authority']
     // set user agent to "NULL", to prevent errors
     req.headers['user-agent'] ??= "NULL"
+    // make sure cookie is defined
+    if (isNaN(req.headers.cookie)) req.headers.cookie = 0
     // get requesting IP
     req.ip = req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
-    // if IPv4 strip 4to6 part of IP
-    if (req.ip.startsWith("::ffff:")) req.ip = req.ip.substring(req.ip.lastIndexOf(':')+1,req.ip.length)
 
     // if request is not for any domain served here, deny the request
     if (req.headers.host != domain) {
-        console.log(` DEN[${req.ip}]: '${req.headers.host}'`)
+        log.con_err(req)
         res.writeHead(400)
         res.end()
+        return
     }
 
     // separate url arguments from the url itself
-    req.args = {0: req.url.split('?')[1]}
-    req.url = req.url.split('?')[0]
+    [req.path, args] = req.url.split('?')
 
-    // split arguments into key:value pairs 
-    if (req.args[0]) {
-        req.args[0] = req.args[0].split('&')
-        req.args[0].forEach(function (arg, i) {
-            index = arg.indexOf("=")
-            split = [arg.slice(0, index), arg.slice(index+1)]
-            req.args[split[0]] = split[1]
-        })
-        delete req.args[0]
-        // allow authentication using argument auth=<WWW-authenticate Basic>
-        if (req.args.auth) req.headers.authorization ??= "Basic " + req.args.auth
+    // split arguments into key:value pairs
+    req.args = {}
+    if (args) {
+        for (arg of args.split('&')) {
+            arg = arg.split('=')
+            req.args[arg[0]] = arg[1]
+            // allow authentication using argument auth=<WWW-authenticate Basic>
+            if (req.args.auth) req.headers.authorization ??= "Basic " + req.args.auth
+        }
+        delete args
     }
 
-    // Shorten non local IPv6 to relevant part
-    // This is both for privacy and for readability of the logs
-    if (req.ip.includes(':') && !req.ip.startsWith('fdbe:126:f8f7:')) {
-        let tmp = ""
-        req.ip.split(':').forEach(function (quad, index) {
-            quad = quad.padStart(4,"0")
+    // split url into path items
+    req.path = req.path.split('/').slice(1)
 
-            if (index < 3) {
-                tmp += quad + ":"
-                return
-            }
-            if (index == 3) {
-                tmp += quad + ":*"
-                return
-            }
-            else return
+    // log the request
+    log.con(req)
+
+    // wait for all data if posting
+    if (req.method == 'POST') {
+        buffer = []
+        req.on('data', function(data) {
+            buffer.push(data)
         })
-        req.ip = tmp
+        req.on('end', function() {
+            req.data = {raw:Buffer.concat(buffer).toString()}
+            req.data.raw.split('&').forEach(function (i) {
+                [k,v] = i.split('=')
+                if (k && v) {
+                    req.data[k] = decodeURIComponent(v).replace(/\+/g,' ')
+                }
+            })
+            req.post_data = req.data.post_data
+            // forward the request to the handler
+            handle.main(req, res)
+        })
     }
-
-
-    // log the request and some of the header information
-    console.log(`\x1b[32m${
-        "    [" + req.ip + "]=>'" +
-        req.method + " " +
-        req.headers.host + req.url +
-        "\n\x1b\[4m        HTTP/" +   req.httpVersion +
-        "; " + req.headers['user-agent'].split(" ",1)[0] +
-        "; "}${req.headers.authorization? "auth" : "noauth"
-    }\x1b[0m`)
-
-    
-    // forward the request to the processor
-    processor_index.main(req, res)
+    // other methods continue
+    else {
+        // forward the request to the handler
+        handle.main(req, res)
+    }
 }
 
 
-
 // Handle insecure HTTP requests
-// Logs connection attempt and redirects to HTTPS
 const insecureRequestListener = function (req, res) {
-    // get request IP-address
-    req.ip = req.headers['x-forwarded-for']?.split(',').shift() || req.socket?.remoteAddress
-    // if IPv4 strip 4to6 part of IP
-    if (req.ip.startsWith("::ffff:")) req.ip = req.ip.substring(req.ip.lastIndexOf(':')+1,req.ip.length)
     // redirect request to HTTPS
-    console.log(`\x1b[33m RED[${req.ip}]: 'https://${req.headers.host}${req.url}'\x1b[0m`)
     res.writeHead(307, {"Location": `https://${req.headers.host}${req.url}`})
     res.end()
-    return
 }
 
 // Prevent starting of HTTPS server if encryption keys aren't ready yet
 function startHttp2() {
     // while keys are not ready check again every 100ms
     // else continue with starting HTTPS server
-    if(!keysFetched) {
-    setTimeout(startHttp2, 100)
+    if(keysFetched != 3) {
+        setTimeout(startHttp2, 100)
     }
     else {
+        log.status("Encryption keys fetched")
         http2.createSecureServer({
-            key: serverkey, 
-            cert: servercrt,
-            ca: cacrt,
+            key: private_key, 
+            cert: server_cert,
+            ca: ca_cert,
             allowHTTP1: true,
             }, requestListener)
             .listen(https_port, host, () => {

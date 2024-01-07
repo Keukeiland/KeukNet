@@ -2,143 +2,191 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
-const fspromises = require('fs').promises
 const crypto = require('crypto')
+const sqlite3 = require('sqlite3').verbose()
+const wg = require('./data/wireguard')
 
-var datapath
-var userdata
+var db
 var salt
-
-exports.setPath = function(path) {
-    datapath = path
-}
-
-exports.load = function (callback) {
-    console.log(`\x1b[34m>> Fetching user data\x1b[0m`)
-    fspromises.readFile(datapath, 'utf8')
-    .then(data => {
-        userdata = JSON.parse(data)
-        callback(undefined)
-    })
-    .catch(err => {
-        console.error(`\x1b[31m>> Could not read user data: ${err}\x1b[0m`)
-        callback(err)
-    })
-}
-
-exports.setSalt = function (saltq) {
+exports.init = function(path, saltq, wg_config, callback) {
+    db = new sqlite3.Database(path+'db.sqlite')
     salt = saltq
+    // intentionally NOT catching errors
+    db.run(`
+    CREATE TABLE IF NOT EXISTS
+    user (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR NOT NULL,
+        password VARCHAR NOT NULL,
+        regdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT FALSE CHECK (is_admin IN (0,1))
+        )
+        `)
+    db.run(`
+    CREATE TABLE IF NOT EXISTS
+    profile (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name VARCHAR,
+        uuid CHAR(36) NOT NULL,
+        ip VARCHAR NOT NULL,
+        installed BOOLEAN NOT NULL DEFAULT FALSE CHECK (installed IN (0,1)),
+        special BOOLEAN NOT NULL DEFAULT FALSE CHECK (special IN (0,1)),
+        CONSTRAINT fk_user_id
+            FOREIGN KEY (user_id)
+                REFERENCES user(id)
+        )
+        `)
+    db.run(`
+    CREATE TABLE IF NOT EXISTS
+    server (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        name VARCHAR NOT NULL,
+        description TEXT NOT NULL,
+        ip VARCHAR NOT NULL,
+        url VARCHAR,
+        CONSTRAINT fk_admin_id
+            FOREIGN KEY (admin_id)
+                REFERENCES user(id)
+        )
+        `)
+    wg.init(path+"wireguard/", wg_config, function () {
+        return callback()
+    })
 }
 
-exports.addUser = function (name, hash, ip, uuid, callback) {
-    userdata[name] = {
-        name: name,
-        hash: hash,
-        ips: [ip],
-        uuids: [uuid],
-        regDate: Date.now()
+function __decrypt_auth(auth, callback) {
+    if (!auth) {
+        return callback(undefined, undefined, new Error("Quit early"))
     }
-
-    fspromises.writeFile(datapath, JSON.stringify(userdata), 'utf8')
-    .then(err => {
-        callback(undefined)
-    })
-    .catch(err => {
-        console.error(`\x1b[31m>> Could not write user data: ${err}\x1b[0m`)
-        callback(err)
-    })
-}
-
-exports.addProfile = function (name, ip, uuid, callback) {
-    userdata[name].ips.push(ip)
-    userdata[name].uuids.push(uuid)
-
-    fspromises.writeFile(datapath, JSON.stringify(userdata), 'utf8')
-    .then(err => {
-        callback(undefined)
-    })
-    .catch(err => {
-        console.error(`\x1b[31m>> Could not write user data: ${err}\x1b[0m`)
-        callback(err)
-    })
-}
-
-exports.deleteProfile = function (name, uuid, callback) {
-    index = userdata[name].uuids.indexOf(uuid)
-
-    userdata[name].uuids[index] = undefined
-    userdata[name].ips[index] = undefined
-
-    fspromises.writeFile(datapath, JSON.stringify(userdata), 'utf8')
-    .then(err => {
-        callback(undefined)
-    })
-    .catch(err => {
-        console.error(`\x1b[31m>> Could not write user data: ${err}\x1b[0m`)
-        callback(err)
-    })
-}
-
-exports.exists = function (id) {
-    if (userdata[id]) {
-        return true
+    // decode authentication string
+    data = new Buffer.from(auth.slice(6), 'base64').toString('utf-8')
+    // check if both name and password
+    if (data.startsWith(':') || data.endsWith(':')) {
+        return callback(undefined, undefined, new Error("Missing name or password"))
     }
-    return false
+    [name, password] = data.split(":")
+    // hash password
+    hash = crypto.pbkdf2Sync(password, salt, 10000, 128, 'sha512').toString('base64')
+    return callback(name, hash)
+}
+
+function __exists(name, callback) {
+    // check if name already exists
+    db.get("SELECT EXISTS(SELECT 1 FROM user WHERE name=$name)", name, function (err, result) {
+        return callback(!!Object.values(result)[0], err)
+    })
+}
+
+function __owns(user, uuid, callback) {
+    db.get("SELECT EXISTS(SELECT 1 FROM profile WHERE user_id=$id AND uuid=$uuid)", [user.id,uuid], function (err, result) {
+        return callback(!!Object.values(result)[0], err)
+    })
+}
+exports.owns = __owns
+
+function __getHighestUserID(callback) {
+    db.get("SELECT MAX(id) FROM profile WHERE special = FALSE", function (err, data) {
+        return callback(data['MAX(id)'], err)
+    })
+}
+
+
+exports.addUser = function (auth, callback) {
+    __decrypt_auth(auth, function (name, password, err) {
+        if (err) return callback(err)
+        // Check if username is already taken
+        __exists(name, function (exists, err) {
+            if (err) return callback(err)
+            if (exists) return callback(new Error("Username already taken"))
+            // add user to db
+            db.run("INSERT INTO user(name,password) VALUES($name,$password)", [name, password], function (err) {
+                return callback(err)
+            })
+        })
+    })
+}
+
+exports.addProfile = function (user, callback) {
+    uuid = crypto.randomUUID()
+
+    __getHighestUserID(function (id, err) {
+        if (err) return callback(err)
+        wg.create(uuid, id+2, function (ip, err) {
+            if (err) return callback(err)
+            db.run("INSERT INTO profile(user_id,uuid,ip) VALUES($id,$uuid,$ip)", [user.id, uuid, ip], function (err) {
+                if (err) return callback(err)
+                return callback()
+            })
+        })
+    })
+}
+
+exports.deleteProfile = function (user, uuid, callback) {
+    __owns(user, uuid, function (user_owns, err) {
+        if (!user_owns) return callback(err)
+        db.run("DELETE FROM profile WHERE uuid=$uuid", [uuid], function (err) {
+            if (err) return callback(err)
+            wg.delete(uuid, function () {
+                return callback()
+            })
+        })
+    })
+}
+
+exports.renameProfile = function (user, uuid, name, callback) {
+    __owns(user, uuid, function (user_owns, err) {
+        if (!user_owns) return callback(err)
+        db.run("UPDATE profile SET name=$name WHERE uuid=$uuid", [name,uuid], function (err) {
+            return callback(err)
+        })
+    })
 }
 
 exports.getConf = function (uuid, callback) {
-    fspromises.readFile(`/home/user/configs/${uuid}.conf`)
-        .then(data => {
-            fspromises.unlink(`/home/user/configs/${uuid}.conf`)
-            .then(function () {
-                callback(data, undefined)
-            })
-            .catch(err => {
-                console.error(`\x1b[31m>> Could not delete ${uuid}.conf ${err}\x1b[0m`)
-                callback(data, err)
-            })
+    wg.getConfig(uuid, function (data, err) {
+        if (err) return callback(undefined, err)
+        db.run("UPDATE profile SET installed=TRUE WHERE uuid=$uuid", [uuid], function (err) {
+            return callback(data, err)
         })
-        .catch(err => {
-            console.error(`\x1b[31m>> Could not read ${uuid}.conf ${err}\x1b[0m`)
-            callback(undefined, err)
-        })
-}
-
-exports.owns = function (id, uuid) {
-    return userdata[id].uuids.includes(uuid)
-}
-
-exports.authenticate = function (authstring) {
-    if (!authstring) {
-        return false
-    }
-    passwd = new Buffer.from(authstring.slice(6), 'base64').toString('utf-8')
-    if (passwd == "log:out") { return false}
-    username = passwd.split(":")[0].replaceAll(/[!@#$%^&*]/g, '')
-    hash = crypto.pbkdf2Sync(passwd, salt, 10000, 512, 'sha512').toString('base64')
-    passwd = " "*1024
-    if (userdata[username] && hash == userdata[username].hash) {
-        return username
-    }
-    else {
-        return false
-    }
-}
-
-exports.getProfiles = function (id) {
-    var result = "<div id='profiles'>\n"
-    userdata[id].ips.forEach(function (ip, index) {
-        if (!ip) return
-        result += `\t<div><p>Profile ${index+1}.    <a href="https://\${req.headers.host}/install?uuid=${userdata[id].uuids[index]}">Install</a>    <a href="/deleteprofile?uuid=${userdata[id].uuids[index]}">Delete</a></p><p>IP: ${ip}</p><p>UUID: ${userdata[id].uuids[index]}</p></div>\n`
     })
-    result += "</div>\n"
-    return result
 }
 
-exports.whoOwnsIp = function (ip, callback) {
-    if (ip == "fdbe:126:f8f7:1::1") return callback("keuknetcore")
-    Object.keys(userdata).forEach(function (key) {
-        if (userdata[key].ips.includes(ip)) return callback(userdata[key].name)
+exports.authenticate = function (auth, callback) {
+    __decrypt_auth(auth, function (name, password, err) {
+        if (err) return callback(undefined, err)
+        db.get("SELECT * FROM user WHERE name=$name", name, function (err, user) {
+            if (user) {
+                if (password == user.password) {
+                    return callback(user, err)
+                }
+            }
+            return callback(undefined, err)
+        })
+    })
+}
+
+exports.getProfiles = function (id, callback) {
+    db.all("SELECT * FROM profile WHERE user_id=$id", id, function (err, profiles) {
+        return callback(profiles, err)
+    })
+}
+
+exports.getServers = function (callback) {
+    db.all("SELECT * FROM server", function (err, servers) {
+        return callback(servers, err)
+    })
+}
+exports.getServer = function (id, callback) {
+    db.get("SELECT * FROM server WHERE id=$id", id, function (err, server) {
+        return callback(server, err)
+    })
+}
+
+exports.addServer = function (name, admin_id, description, ip, url, callback) {
+    db.run("INSERT INTO server(name,admin_id,description,ip,url) VALUES($name,$admin_id,$description,$ip,$url)", [name,admin_id,description,ip,url], function (err) {
+        if (err) return callback(err)
+        return callback()
     })
 }

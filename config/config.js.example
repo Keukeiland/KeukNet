@@ -1,0 +1,8 @@
+exports.domain = "example.com"
+exports.host = "::"
+exports.https_port = 443
+exports.http_port = 80
+exports.salt = "Password salt here!"
+exports.private_key_path = `${__dirname}/../certs/privkey.pem`
+exports.server_cert_path = `${__dirname}/../certs/cert.pem`
+exports.ca_cert_path = `${__dirname}/../certs/ca.pem`

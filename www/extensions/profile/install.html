@@ -1,0 +1,23 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/profile/index.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div id="intro">
+        {% if device is not defined %}
+            <h2>Please select the appropriate device below for the set-up instructions.</h2>
+            <h3>Select your Operating System below</h3>
+            <h4>PC</h4>
+            <a href="/profile/install?uuid={{uuid}}&device=windows">Windows</a>
+            <a href="/profile/install?uuid={{uuid}}&device=linux">Linux</a>
+            <a href="/profile/install?uuid={{uuid}}&device=macos">MacOS</a>
+            <h4>Mobile</h4>
+            <a href="/profile/install?uuid={{uuid}}&device=android">Android</a>
+            <a href="/profile/install?uuid={{uuid}}&device=ios">IOS</a>
+        {% else %}
+            {% include "profile/devices/"+device+".html" %}
+        {% endif %}
+    </div>
+{% endblock %}

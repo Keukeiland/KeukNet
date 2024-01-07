@@ -1,0 +1,9 @@
+<section class="extensions">
+    {% for ext in extensions %}
+        {% if extension.name|lower == ext %}
+            <a href="/{{ext}}" class="selected">{{ext}}</a>
+        {% else %}
+            <a href="/{{ext}}">{{ext}}</a>
+        {% endif %}
+    {% endfor %}
+</section>

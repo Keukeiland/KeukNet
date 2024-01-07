@@ -1,0 +1,38 @@
+.content {
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 0;
+}
+
+.content > .user {
+    padding: var(--margin-normal);
+    min-width: 300px;
+    flex-grow: 1;
+}
+
+.content > .profiles {
+    padding: 0 var(--margin-normal);
+    border-left: 1px dashed black;
+    min-width: 200px;
+    max-width: 300px;
+    max-height: calc(var(--max-window-height) - 20px);
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: inherit;
+}
+.content > .profiles > .menu {
+    position: sticky;
+    top: 0;
+    background-color: inherit;
+    z-index: 1;
+    padding-top: var(--margin-normal);
+}
+.content > .profiles > .profile p:nth-child(1) {
+    font-weight: bold;
+    margin-bottom: 0;
+}
+.content > .profiles > .profile p:nth-child(2) {
+    margin-top: 0;
+    margin-left: 5px;
+    font-size: 12px;
+}

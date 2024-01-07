@@ -1,0 +1,54 @@
+.content {
+    padding: var(--margin-normal);
+}
+
+/* General server item */
+.content .server > p:nth-child(1) {
+    font-weight: bold;
+    font-size: larger;
+    margin-bottom: 0;
+}
+.content .server > p:nth-child(1) > a {
+    text-decoration: none;
+    color: var(--color-link)
+}
+
+/* Serverlist */
+.content > .serverlist {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+.content > .serverlist > .server {
+    width: 50%;
+    height: auto;
+    overflow: hidden;
+    box-sizing: border-box;
+    border-bottom: 1px dashed black;
+    padding: var(--margin-normal);
+}
+.content > .serverlist > .server:nth-child(2n -1) {
+    border-right: 1px dashed black;
+}
+.content > .serverlist > .server > p:nth-child(1) {
+    margin-top: var(--margin-small);
+}
+.content > .serverlist > .server > p:nth-child(2) {
+    margin-top: 0;
+    margin-left: 5px;
+    font-size: 15px;
+}
+.content > .serverlist > .server > p:nth-child(3) {
+    margin-bottom: var(--margin-small);
+}
+.content > .serverlist > .server > p:nth-child(3) > a {
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+    color: var(--color-link);
+    margin-top: auto;
+    margin-bottom: 0;
+    bottom: 0;
+    top: auto;
+    height: auto;
+}

@@ -1,0 +1,17 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/servers/index.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="server">
+        {% if server.url %}
+        <p><a href="{{server.url}}">{{server.name}}</a></p>
+        {% else %}
+        <p>{{server.name}}</p>
+        {% endif %}
+        <p>IP: {{server.ip}}</p>
+        <p>{{server.description | safe}}</p>
+    </div>
+{% endblock %}

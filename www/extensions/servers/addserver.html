@@ -1,0 +1,20 @@
+{% extends "extension.html" %}
+
+{% block body %}
+
+    <h1>Add new server</h1>
+    <form method="POST" action="/servers/addserver">
+        <label for="name">Server name:</label>
+        <input type="text" name="name" required>
+        <label for="admin_id">Admin ID:</label>
+        <input type="text" name="admin_id" required>
+        <label for="description">Services description (HTML):</label>
+        <input type="text" name="description" required>
+        <label for="ip">Server KeukNet IP (fdbe:126:f8f7:*):</label>
+        <input type="text" name="ip" required>
+        <label for="url">Server website URL:</label>
+        <input type="text" name="url">
+        <input type="submit">
+    </form>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/profile/index.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <section class="user">
+        <h1>Hello {{user.name}}!</h1>
+        <h2>Status: {{ "connected" if status else "disconnected" }}</h2>
+        <a href="keuknet://load&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Connect</a>
+        <a href="keuknet://unload&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Disconnect</a>
+    </section>
+
+    <section class="profiles">
+        <div class="menu">
+            <a href="/profile/add" class="button">Create New</a>
+            <hr>
+        </div>
+        {% for p in profiles %}
+            <div class="profile">
+                <p>
+                    {% if p.name %}
+                        {{p.name}}
+                    {% else %}
+                        Profile {{loop.index}}
+                    {% endif %}
+                </p>
+                <p>{{p.uuid}}</p>
+                <p>IP: {{p.ip}}</p>
+                <a href="/profile/install?uuid={{p.uuid}}" class="{{'disabled' if p.installed}}button">Install</a>
+                <a href="/profile/rename?uuid={{p.uuid}}" class="button">Rename</a>
+                <a href="/profile/delete?uuid={{p.uuid}}" class="button">Delete</a>
+                <hr>
+            </div>
+        {% else %}
+            <p>No profiles yet.</p>
+        {% endfor %}
+    </section>
+
+{% endblock %}
