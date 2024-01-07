@@ -52,8 +52,6 @@ fetch.key(ca_cert_path, function(data, err) {
 
 // handle all requests for both HTTPS and HTTP/2
 const requestListener = function (req, res) {
-    req.headers.host = domain
-    
     // if no authorization headers set it to false, to prevent errors
     req.headers.authorization ??= false
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
