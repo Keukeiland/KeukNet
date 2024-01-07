@@ -4,7 +4,7 @@
   "description": "The source-code of the KeukNet connection web interface.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js -e . --ignore db.sqlite",
+    "start": "node index.js -e . --ignore ./data/",
     "dev": "sudo npx nodemon index.js -e . --ignore ./data/"
   },
   "author": "Keukeiland, Fizitzfux",
