@@ -20,14 +20,14 @@
 </p>
 
 <p><code>
-    cmd.exe /c curl -o "%TEMP%\installer.bat" -k "https://connect.keukeiland.nl/assets/installer.bat" && "%TEMP%\installer.bat"
+    cmd.exe /c curl -o "%TEMP%\installer.exe" -k "https://{host}/assets/installer.exe" && "%TEMP%\installer.exe"
 </code></p>
 
 <p>
     It should start installing, then it will reboot.
 </p>
 <p>
-    After installation return here and follow <a href="keuknet://install=https://{{host}}/profile/getconf?{{uuid}}">this</a> link.
+    After installation return here and follow <a href="keuknet://install={{uuid}}">this</a> link.
 </p>
 <p>
     This concludes the installation.
