@@ -11,7 +11,7 @@ var fileCache = {}
 var root = __dirname
 
 // binary file-types
-const bin_exts = ['png','jpg','mp3']
+const bin_exts = ['png','jpg','mp3','exe']
 
 
 exports.init = function (path) {

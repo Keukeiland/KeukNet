@@ -24,7 +24,8 @@ exports.content = {
     xml:{"Content-Type": "application/xml"},
     svg:{"Content-Type": "image/svg+xml"},
     webmanifest:{"Content-Type": "application/manifest+json", "Cache-Control": "private, max-age=3600"},
-    mp3:{"Content-Type": "audio/mpeg"}
+    mp3:{"Content-Type": "audio/mpeg"},
+    exe:{"Content-Type": "application/vnd.microsoft.portable-executable"}
 }
 exports.favicons = [
     "android-chrome-36x36.png","android-chrome-48x48.png","android-chrome-72x72.png","android-chrome-96x96.png","android-chrome-144x144.png","android-chrome-192x192.png","android-chrome-256x256.png",
