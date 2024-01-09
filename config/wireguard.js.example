@@ -5,3 +5,4 @@ exports.endpoint = "example.com"
 exports.port = "51820"
 exports.mtu = "1420"
 exports.privkey = "INVALID KEY" //generate with `wg genkey`
+exports.pubkey = "" //generate with `echo <privkey> | wg pubkey`

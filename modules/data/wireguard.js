@@ -40,6 +40,7 @@ exports.init = function (path, wg_config, callback) {
 
 function __start_server(callback) {
     // start wireguard
+    exec(`wg-quick down ${configs_dir}wg0.conf`)
     exec(`wg-quick up ${configs_dir}wg0.conf`)
     // collect all configs in server config
     __init_server_config(function () {
@@ -144,7 +145,7 @@ function __add(uuid, pubkey, prekey, privkey, ip, callback) {
         `Address = ${ip+config.subnet_mask}\n`+
         `DNS = ${config.dns_server}\n`+
         '[Peer]\n'+
-        `PublicKey = ${pubkey}\n`+
+        `PublicKey = ${config.pubkey}\n`+
         `PresharedKey = ${prekey}\n`+
         `Endpoint = ${config.endpoint}:${config.port}\n`+
         `AllowedIPs = ${config.subnet+config.subnet_mask}\n`,
