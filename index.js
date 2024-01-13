@@ -7,6 +7,9 @@
 const http2 = require('http2')
 const http = require('http')
 
+// enable use of dotenv
+require('dotenv').config()
+
 // import config values
 const {
     domain, http_port, https_port,
@@ -52,6 +55,11 @@ fetch.key(ca_cert_path, function(data, err) {
 
 // handle all requests for both HTTPS and HTTP/2
 const requestListener = function (req, res) {
+    if (process.env.DEV) {
+        req.headers.host = domain
+        req.ip = process.env.IP
+    }
+
     // if no authorization headers set it to false, to prevent errors
     req.headers.authorization ??= false
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
@@ -61,7 +69,7 @@ const requestListener = function (req, res) {
     // make sure cookie is defined
     if (isNaN(req.headers.cookie)) req.headers.cookie = 0
     // get requesting IP
-    req.ip = req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
+    req.ip ??= req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
 
     // if request is not for any domain served here, deny the request
     if (req.headers.host != domain) {
