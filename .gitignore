@@ -28,14 +28,10 @@ node_modules/
 .env.production.local
 .env.local
 
-# config files, shell scripts and databases
-/config/*
-!/config/*.example
-*.sh
-/data/*
-/certs/*
-
 # build artifacts
 dist/
 build/
 *.spec
+
+# testing folders
+/certs

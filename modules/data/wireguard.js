@@ -40,8 +40,12 @@ exports.init = function (path, wg_config, callback) {
 
 function __start_server(callback) {
     // start wireguard
-    exec(`wg-quick down ${configs_dir}wg0.conf`)
-    exec(`wg-quick up ${configs_dir}wg0.conf`)
+    exec('wg-quick down wg0')
+    exec('wg-quick up wg0', function (err, _, stderr) {
+        if (err || stderr) {
+            return callback(stderr ?? err)
+        }
+    })
     // collect all configs in server config
     __init_server_config(function () {
         return callback()
@@ -96,7 +100,9 @@ function __save_config() {
     file.end()
     __index_configs()
     // reload wireguard
-    exec(`wg syncconf wg0 <(wg-quick strip ${configs_dir}wg0.conf)`)
+    exec(`wg syncconf wg0 <(wg-quick strip wg0)`, function (err, _, stderr) {
+        console.log(err, stderr)
+    })
 }
 
 /**
