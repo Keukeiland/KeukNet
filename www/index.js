@@ -37,7 +37,7 @@ exports.main = function (req, res) {
     req.context.connected = req.ip.startsWith(ip_scope)
 
     // Authenticate using user&pass, else using ip
-    data.authenticate(req.headers.authorization, req.ip, function (user, err) {
+    data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
         req.context.user = user
         if (err) req.context.auth_err = err
         if (user && user.is_admin) req.context.extensions.push('admin')

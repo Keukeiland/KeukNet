@@ -72,11 +72,9 @@ const requestListener = function (req, res) {
     // get requesting IP
     req.ip ??= req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
 
-    // if request is not for any domain served here, deny the request
+    // if request is not for any domain served here, act like server isn't here
     if (req.headers.host != domain) {
         log.con_err(req)
-        res.writeHead(400)
-        res.end()
         return
     }
 
