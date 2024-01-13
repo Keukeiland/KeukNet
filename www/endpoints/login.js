@@ -7,7 +7,6 @@ exports.init = function (global) {
 exports.main = function (req, res) {
     // if invalid credentials display the error
     if (!req.context.user) {
-        console.log(req.headers.cookie)
         err = req.context.auth_err ?? new Error("Wrong name or password")
         // if cancelled return to home
         if (req.headers.cookie > 0 && err.message == "Quit early") {

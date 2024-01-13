@@ -64,7 +64,6 @@ exports.main = function (req, res) {
             var filetype = req.url.split('.').pop()
             fetch.file(`favicons${req.url}`, function (data, err) {
                 if (err) {
-                    console.error(err)
                     res.writeHead(404)
                     res.end()
                     return
@@ -78,7 +77,6 @@ exports.main = function (req, res) {
             var filetype = req.url.split('.').pop()
             fetch.file(req.url, function (data, err) {
                 if (err) {
-                    console.error(err)
                     res.writeHead(404)
                     res.end()
                     return

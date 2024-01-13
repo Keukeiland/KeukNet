@@ -36,7 +36,7 @@ exports.file = function (file, callback) {
         })
         // error if file can't be read
         .catch(err => {
-            console.error(`\x1b[31m>> Could not read [${file}] ${err}\x1b[0m`)
+            console.error(`\x1b[31m>> Could not read [${file}]\x1b[0m`)
             return callback(undefined, err)
         })
 }
