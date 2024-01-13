@@ -37,7 +37,9 @@ exports.main = function (req, res) {
         req.context.extensions = [...extensions]
         req.context.user = user
         if (err) req.context.auth_err = err
+        console.log(req.ip)
         req.context.connected = req.ip.startsWith("fdbe:126:f8f7:")
+        console.log(req.context.connected)
         if (user && user.is_admin) req.context.extensions.push('admin')
     
         // if location is an endpoint

@@ -7,7 +7,7 @@
 {% block body %}
     <section class="user">
         <h1>Hello {{user.name}}!</h1>
-        <h2>Status: {{ "connected" if status else "disconnected" }}</h2>
+        <h2>Status: {{ "connected" if connected else "disconnected" }}</h2>
         <a href="keuknet://load&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Connect</a>
         <a href="keuknet://unload&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Disconnect</a>
     </section>
