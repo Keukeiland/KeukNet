@@ -153,9 +153,17 @@ exports.getConf = function (uuid, callback) {
     })
 }
 
-exports.authenticate = function (auth, callback) {
+exports.authenticate = function (auth, ip, callback) {
+    // Try to get name and password
     __decrypt_auth(auth, function (name, password, err) {
-        if (err) return callback(undefined, err)
+        if (err) {
+            // Try using IP-address if no name and password
+            db.get("SELECT u.* FROM user u JOIN profile p ON p.user_id = u.id WHERE p.ip=$ip", ip, function (err, user) {
+                return callback(user, err)
+            })
+            return
+        }
+        // Auth using name and password
         db.get("SELECT * FROM user WHERE name=$name", name, function (err, user) {
             if (user) {
                 if (password == user.password) {

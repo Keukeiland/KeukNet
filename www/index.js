@@ -13,9 +13,9 @@ var extensions = [
 
 var indices = {}
 var extension_indices = {}
-var fetch, content, favicons, data
+var fetch, content, favicons, data, ip_scope
 exports.init = function (global) {
-    ({fetch, content, favicons, data} = global)
+    ({fetch, content, favicons, data,ip_scope} = global)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
@@ -31,15 +31,15 @@ exports.init = function (global) {
 exports.main = function (req, res) {
     var location = req.path.shift() || 'index'
     
-    data.authenticate(req.headers.authorization, function (user, err) {
-        // set request context
-        req.context = {...req.args}
-        req.context.extensions = [...extensions]
+    // set request context
+    req.context = {...req.args}
+    req.context.extensions = [...extensions]
+    req.context.connected = req.ip.startsWith(ip_scope)
+
+    // Authenticate using user&pass, else using ip
+    data.authenticate(req.headers.authorization, req.ip, function (user, err) {
         req.context.user = user
         if (err) req.context.auth_err = err
-        console.log(req.ip)
-        req.context.connected = req.ip.startsWith("fdbe:126:f8f7:")
-        console.log(req.context.connected)
         if (user && user.is_admin) req.context.extensions.push('admin')
     
         // if location is an endpoint

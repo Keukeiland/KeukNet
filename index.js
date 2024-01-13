@@ -21,6 +21,7 @@ const wg_config = require('./config/wireguard')
 // set up global context
 const global = require('./global')
 global.salt = salt
+global.ip_scope = wg_config.subnet
 const {fetch, data, log} = global
 
 // set up request handler
