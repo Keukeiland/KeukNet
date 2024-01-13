@@ -2,6 +2,8 @@ const { exec } = require('child_process')
 const fs = require('fs')
 const readline = require('readline')
 
+const shell="/bin/bash"
+
 var configs_dir = ""
 var file_lines = []
 var configs = {}
@@ -40,8 +42,8 @@ exports.init = function (path, wg_config, callback) {
 
 function __start_server(callback) {
     // start wireguard
-    exec('wg-quick down wg0')
-    exec('wg-quick up wg0', function (err, _, stderr) {
+    exec('wg-quick down wg0', {shell:shell})
+    exec('wg-quick up wg0', {shell:shell}, function (err, _, stderr) {
         if (err || stderr) {
             return callback(stderr ?? err)
         }
@@ -100,7 +102,7 @@ function __save_config() {
     file.end()
     __index_configs()
     // reload wireguard
-    exec(`wg syncconf wg0 <(wg-quick strip wg0)`, function (err, _, stderr) {
+    exec(`wg syncconf wg0 <(wg-quick strip wg0)`, {shell:shell}, function (err, _, stderr) {
         console.log(err, stderr)
     })
 }
