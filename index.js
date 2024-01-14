@@ -14,7 +14,8 @@ require('dotenv').config()
 const {
     domain, http_port, https_port,
     host, salt, private_key_path,
-    server_cert_path, ca_cert_path
+    server_cert_path, ca_cert_path,
+    tmp_dir
 } = require('./config/config')
 const wg_config = require('./config/wireguard')
 
@@ -31,7 +32,10 @@ handle.init(Object.freeze(global))
 // set up modules
 fetch.init(`${__dirname}/www/static/`)
 log.status("Initializing database")
-data.init(`${__dirname}/data/`, salt, wg_config, function () {
+data.init(`${__dirname}/data/`, salt, wg_config, tmp_dir, function (err) {
+    if (err) {
+        log.err(err)
+    }
     log.status("Database initialized")
 })
 

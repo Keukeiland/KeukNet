@@ -8,7 +8,7 @@ const wg = require('./data/wireguard')
 
 var db
 var salt
-exports.init = function(path, saltq, wg_config, callback) {
+exports.init = function(path, saltq, wg_config, tmp_path, callback) {
     db = new sqlite3.Database(path+'db.sqlite')
     salt = saltq
     // intentionally NOT catching errors
@@ -51,8 +51,8 @@ exports.init = function(path, saltq, wg_config, callback) {
                 REFERENCES user(id)
         )
         `)
-    wg.init(path+"wireguard/", wg_config, function () {
-        return callback()
+    wg.init(path+"wireguard/", wg_config, tmp_path, function (err) {
+        return callback(err)
     })
 }
 

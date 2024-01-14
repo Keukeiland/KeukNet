@@ -2,16 +2,16 @@ const { exec } = require('child_process')
 const fs = require('fs')
 const readline = require('readline')
 
-const shell="/bin/bash"
-
+var tmp_dir = ""
 var configs_dir = ""
 var file_lines = []
 var configs = {}
 var config = {}
 
-exports.init = function (path, wg_config, callback) {
+exports.init = function (path, wg_config, tmp_path, callback) {
     config = wg_config
     configs_dir = path
+    tmp_dir = tmp_path
     // check if config exists
     fs.stat(configs_dir+'wg0.conf', function(err, stat) {
         if (err) {
@@ -29,23 +29,23 @@ exports.init = function (path, wg_config, callback) {
             `PostDown = ip6tables -D FORWARD -i %i -d ::/0 -j DROP && ip6tables -D FORWARD -i %i -d ${config.subnet+config.subnet_mask} -j ACCEPT\n`,
             function (err) {
                 if (err) return callback(err)
-                __start_server(function () {
-                    return callback()
+                __start_server(function (err) {
+                    return callback(err)
                 })
             })
         }
-        __start_server(function () {
-            return callback()
+        __start_server(function (err) {
+            return callback(err)
         })
     })
 }
 
 function __start_server(callback) {
     // start wireguard
-    exec('wg-quick down wg0', {shell:shell})
-    exec('wg-quick up wg0', {shell:shell}, function (err, _, stderr) {
+    exec('wg-quick down wg0')
+    exec(`wg-quick up ${configs_dir}wg0.conf`, function (err, _, stderr) {
         if (err || stderr) {
-            return callback(stderr ?? err)
+            return callback(err ?? stderr)
         }
     })
     // collect all configs in server config
@@ -102,7 +102,7 @@ function __save_config() {
     file.end()
     __index_configs()
     // reload wireguard
-    exec(`wg syncconf wg0 <(wg-quick strip wg0)`, {shell:shell}, function (err, _, stderr) {
+    exec(`wg-quick strip wg0 >${tmp_dir}/wg0.conf && wg syncconf wg0 ${tmp_dir}/wg0.conf`, function (err, _, stderr) {
         if (err || stderr) console.log(err, stderr)
     })
 }
