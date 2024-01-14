@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/keukeiland/keuknet/issues"
   },
-  "homepage": "https://connect.keukeiland.nl/",
+  "homepage": "https://keuk.net/",
   "devDependencies": {
     "nodemon": "^3.0.2"
   }
