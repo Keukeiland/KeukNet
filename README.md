@@ -13,12 +13,6 @@ Below is a simple tutorial on how to get the server up and running.
 `cp config/wireguard.js.example config/wireguard.js`
 Now edit both `config/config.js` and `config/wireguard.js` to your taste.
 
-### Set up wireguard
-Run `npm start` and after it has started directly do `CTRL+C` to kill the server.
-
-Now hard-link `data/wireguard/wg0.conf` to your wireguard config location (normally `/etc/wireguard`):
-`ln data/wireguard/wg0.conf <your wireguard dir>/wg0.conf`
-
 ### Running
 Set-up is done now, run the server using:
 `npm start` (or `sudo npm start`)
