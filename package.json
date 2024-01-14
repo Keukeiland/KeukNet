@@ -1,6 +1,6 @@
 {
   "name": "keuknet",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A webserver and client program for easily managing a WireGuard-network in a client-server setting.",
   "main": "index.js",
   "scripts": {
