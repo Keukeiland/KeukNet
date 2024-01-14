@@ -16,10 +16,8 @@ exports.main = function (req, res) {
         return
     }
     if (req.data) {
-        console.log('>',req.data, ' + ', req.post_data)
         data.renameProfile(req.context.user, req.args.uuid, req.post_data, function (err) {
             if (err) {
-                console.log(err)
                 res.writeHead(500)
                 res.end()
                 return

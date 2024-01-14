@@ -58,6 +58,7 @@ exports.main = function (req, res) {
             }
             // call the endpoint
             extension_indices[location].main(req, res)
+            return
         }
         // if location is a favicon
         else if (favicons.includes(location)) {

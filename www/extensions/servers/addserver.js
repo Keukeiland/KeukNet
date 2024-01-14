@@ -12,7 +12,6 @@ exports.main = function (req, res) {
           body += data
         })
         req.on('end', function() {
-          console.log('Body: ' + body)
             servers.addServer(body, function (err) {
                 if (err) {
                     console.error(`Can't get description.md from ${body}`)

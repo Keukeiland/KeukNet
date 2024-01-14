@@ -6,7 +6,6 @@ exports.init = function (global) {
 
 exports.main = function (req, res) {
     uuid = Object.keys(req.args)[0]
-    console.log(uuid)
     data.getConf(uuid, function (data, err) {
         if (err) {
             res.writeHead(404)

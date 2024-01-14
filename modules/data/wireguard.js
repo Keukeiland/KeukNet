@@ -103,7 +103,7 @@ function __save_config() {
     __index_configs()
     // reload wireguard
     exec(`wg syncconf wg0 <(wg-quick strip wg0)`, {shell:shell}, function (err, _, stderr) {
-        console.log(err, stderr)
+        if (err || stderr) console.log(err, stderr)
     })
 }
 

@@ -5,7 +5,6 @@ exports.init = function (global) {
 }
 
 exports.main = function (req, res) {
-    console.log(req.data)
     req.context.extension = {
         name: "Servers"
     }
@@ -48,11 +47,9 @@ exports.main = function (req, res) {
     if (location == "addserver") {
         if (req.context.user.is_admin) {
             if (req.data) {
-                console.log(req.data)
                 if (req.data.name && req.data.admin_id && req.data.description && req.data.ip) {
                     data.addServer(req.data.name, req.data.admin_id, req.data.description, req.data.ip, req.data.url, function (err) {
                         if (err) {
-                            console.log(err)
                             res.writeHead(500)
                             res.end()
                             return

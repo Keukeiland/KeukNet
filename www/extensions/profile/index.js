@@ -34,9 +34,8 @@ exports.main = function (req, res) {
                 res.end(data)
             })
         })
-        return
     }
-    if (endpoints.includes(location)) {
+    else if (endpoints.includes(location)) {
         indices[location].main(req,res)
         return
     }
