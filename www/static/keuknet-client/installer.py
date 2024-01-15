@@ -10,12 +10,12 @@ import sys
 from sys import exit
 
 # Config values
-HOST = "connect.keukeiland.nl"
+HOST = "keuk.net"
 DOWNLOAD_ARGS = "--no-progress-meter --fail"
 OTHER_DESKTOP_FILES_DIR = "/usr/share/applications"
 OTHER_BINARIES_DIR = "/usr/bin"
 OTHER_DEPENDENCIES = {
-    'wg': "WireGuard",
+    'wg-quick': "WireGuard-tools",
     'xdg-mime': "XDG",
     'curl': "cURL",
     'chmod': "chmod"
@@ -48,14 +48,14 @@ if OTHER:
 if WINDOWS:
     os.system("mkdir \"%TEMP%\\keuknetinstaller\"")
     os.system(f"curl -o \"%TEMP%\\keuknetinstaller\\wireguard.exe\" https://download.wireguard.com/windows-client/wireguard-installer.exe {DOWNLOAD_ARGS}")
-    os.system(f"curl -o \"%TEMP%\\keuknetinstaller\\keuknet.exe\" https://{HOST}/assets/keuknet.exe {DOWNLOAD_ARGS}")
+    os.system(f"curl -o \"%TEMP%\\keuknetinstaller\\keuknet.exe\" https://{HOST}/keuknet-client/keuknet.exe {DOWNLOAD_ARGS}")
     os.system("mkdir \"%PROGRAMFILES%\\KeukNet\"")
 if OTHER:
     if not os.path.isdir(OTHER_DESKTOP_FILES_DIR) or not os.path.isdir(OTHER_BINARIES_DIR):
         print("Unusual file-system lay-out detected. Is your OS UNIX-compliant?\nIf not please edit this script to use the correct paths.")
         exit(1)
     for cmd, name in OTHER_DEPENDENCIES.items():
-        if os.system(f"{cmd} --version >/dev/null") != 0:
+        if os.system(f"man {cmd} >/dev/null") != 0:
             print(f"{name} not available at '{cmd}'. Please install a package that provides {cmd}.")
             exit(1)
 
@@ -70,8 +70,8 @@ if WINDOWS:
     os.system("reg add HKCR\\keuknet\\shell\\open /f")
     os.system("reg add HKCR\\keuknet\\shell\\open\\command /d \"\\\"C:\\Program Files\\KeukNet\\keuknet.exe\\\" \"%1\"\" /f")
 if OTHER:
-    os.system(f"curl -o \"{OTHER_DESKTOP_FILES_DIR}/keuknet.desktop\" https:/{HOST}/assets/keuknet.desktop {DOWNLOAD_ARGS}")
-    os.system(f"curl -o \"{OTHER_BINARIES_DIR}/keuknet.py\" https:/{HOST}/assets/keuknet.py {DOWNLOAD_ARGS}")
+    os.system(f"curl -o \"{OTHER_DESKTOP_FILES_DIR}/keuknet.desktop\" https:/{HOST}/keuknet-client/keuknet.desktop {DOWNLOAD_ARGS}")
+    os.system(f"curl -o \"{OTHER_BINARIES_DIR}/keuknet.py\" https:/{HOST}/keuknet-client/keuknet.py {DOWNLOAD_ARGS}")
     os.system(f"chmod +x \"{OTHER_BINARIES_DIR}/keuknet.py\"")
     os.system("xdg-mime default keuknet.desktop x-scheme-handler/keuknet")
 

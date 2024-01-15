@@ -12,7 +12,7 @@ from sys import argv as args
 from sys import exit
 
 DEBUG = True
-HOST = "connect.keukeiland.nl"
+HOST = "keuk.net"
 DOWNLOAD_ARGS = "--no-progress-meter --fail"
 
 # Constants
