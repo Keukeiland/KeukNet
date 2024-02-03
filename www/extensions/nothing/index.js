@@ -1,3 +1,7 @@
+exports.requires_login = function (path) {
+    return true
+}
+
 var content, nj
 exports.init = function (global) {
     ({content, nj} = global)

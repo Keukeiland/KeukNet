@@ -1,3 +1,7 @@
+exports.requires_login = function (path) {
+    return true
+}
+
 var content, nj, data, fetch
 exports.init = function (global) {
     ({content, nj, data,microfetch} = global)

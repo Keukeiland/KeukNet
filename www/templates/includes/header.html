@@ -1,11 +1,16 @@
 <header>
-    <img src="/keuknet.png">
-    <nav>
+    <nav class="left">
+        <a href="https://github.com/keukeiland/keuknet" style="max-height: var(--header-height);">
+            <img src="/keuknet.png" alt="KeukNet" height="25px">
+        </a>
+        <a href="/~getting-started" target="_blank">Getting started</a>
+    </nav>
+    <nav class="right">
         {% if user %}
-            <a href="/logout">Logout</a>
+        <a href="/logout">Logout</a>
         {% else %}
-            <a href="/register">Register</a>
-            <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        <a href="/login">Login</a>
         {% endif %}
     </nav>
 </header>

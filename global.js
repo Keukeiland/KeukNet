@@ -1,10 +1,11 @@
 /* import external modules */
-const nj = require('nunjucks').configure(['www/templates','www/extensions'])
+const nj = require('nunjucks').configure(['www/templates','www/pages','www/extensions'])
 
 /* import custom modules */
 const microfetch = require('./modules/microfetch')
 const fetch = require('./modules/fetch')
 const data = require('./modules/data')
+const cuts = require('./modules/cuts')
 const log = require('./modules/log')
 
 /* exports */
@@ -42,4 +43,5 @@ exports.nj = nj
 exports.microfetch = microfetch
 exports.fetch = fetch
 exports.data = data
+exports.cuts = cuts
 exports.log = log

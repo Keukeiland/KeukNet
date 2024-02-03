@@ -13,9 +13,9 @@ var extensions = [
 
 var indices = {}
 var extension_indices = {}
-var fetch, content, favicons, data, ip_scope
+var fetch, content, favicons, data, ip_scope, cuts, nj
 exports.init = function (global) {
-    ({fetch, content, favicons, data,ip_scope} = global)
+    ({fetch,content,favicons,data,ip_scope,cuts,nj} = global)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
@@ -29,40 +29,50 @@ exports.init = function (global) {
 }
 
 exports.main = function (req, res) {
-    var location = req.path.shift() || 'index'
-    
-    // set request context
-    req.context = {...req.args}
-    req.context.extensions = [...extensions]
-    req.context.connected = req.ip.startsWith(ip_scope)
+    var location = req.path.shift() || (req.headers.authorization ? 'profile' : '~index')
+    var filetype = location.split('.')[1] ?? location.startsWith('~')
 
-    // Authenticate using user&pass, else using ip
-    data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
-        req.context.user = user
-        if (err) req.context.auth_err = err
-        if (user && user.is_admin) req.context.extensions.push('admin')
+    // If endpoint
+    if (!filetype) {
+        // set request context
+        req.context = {...req.args}
+        req.context.extensions = [...extensions]
+        req.context.connected = req.ip.startsWith(ip_scope)
     
-        // if location is an endpoint
-        if (endpoints.includes(location)) {
-            // call the endpoint
-            indices[location].main(req, res)
-        }
-        // if location is an extension
-        else if (req.context.extensions.includes(location)) {
-            if (!user) {
-                if (req.path[0] != "getconf") {
-                    res.writeHead(307, {Location: "/login"})
-                    res.end()
-                    return
-                }
+        // Authenticate using user&pass, else using ip
+        data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
+            req.context.user = user
+            if (err) req.context.auth_err = err
+            if (user && user.is_admin) req.context.extensions.push('admin')
+        
+            // Default endpoint
+            if (endpoints.includes(location)) {
+                indices[location].main(req, res)
             }
-            // call the endpoint
-            extension_indices[location].main(req, res)
-            return
+            // Extension
+            else if (req.context.extensions.includes(location)) {
+                // If login required
+                if (!user && extension_indices[location].requires_login(req.path)) {
+                        res.writeHead(307, {Location: "/login"})
+                        res.end()
+                        return
+                }
+                extension_indices[location].main(req, res)
+            }
+            else {
+                res.writeHead(404)
+                res.end()
+            }
+        })
+    }
+    else {
+        // Templated html
+        if (location.startsWith('~')) {
+            cuts.end_nj(req, res, 'content/'+location.split('~')[1])
         }
-        // if location is a favicon
+        // Favicon
         else if (favicons.includes(location)) {
-            var filetype = req.url.split('.').pop()
+            var filetype = 
             fetch.file(`favicons${req.url}`, function (data, err) {
                 if (err) {
                     res.writeHead(404)
@@ -86,5 +96,5 @@ exports.main = function (req, res) {
                 res.end(data)
             })
         }
-    })
+    }
 }
