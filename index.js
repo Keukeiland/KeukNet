@@ -24,6 +24,7 @@ const global = require('./global')
 global.salt = salt
 global.ip_scope = wg_config.subnet
 const {fetch, data, log} = global
+global.cuts.init(global)
 
 // set up request handler
 const handle = require('./www/index')

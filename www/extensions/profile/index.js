@@ -1,3 +1,10 @@
+exports.requires_login = function (path) {
+    if (path == ['getconf']) {
+        return false
+    }
+    return true
+}
+
 const endpoints = [
     'getconf','delete','add',
     'install','rename'
