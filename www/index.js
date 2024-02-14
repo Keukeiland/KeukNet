@@ -29,72 +29,78 @@ exports.init = function (global) {
 }
 
 exports.main = function (req, res) {
-    var location = req.path.shift() || (req.headers.authorization ? 'profile' : '~index')
-    var filetype = location.split('.')[1] ?? location.startsWith('~')
+    var location = req.path.shift()
 
-    // If endpoint
-    if (!filetype) {
-        // set request context
-        req.context = {...req.args}
-        req.context.extensions = [...extensions]
-        req.context.connected = req.ip.startsWith(ip_scope)
-    
-        // Authenticate using user&pass, else using ip
-        data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
-            req.context.user = user
-            if (err) req.context.auth_err = err
-            if (user && user.is_admin) req.context.extensions.push('admin')
-        
-            // Default endpoint
-            if (endpoints.includes(location)) {
-                indices[location].main(req, res)
-            }
-            // Extension
-            else if (req.context.extensions.includes(location)) {
-                // If login required
-                if (!user && extension_indices[location].requires_login(req.path)) {
-                        res.writeHead(307, {Location: "/login"})
-                        res.end()
-                        return
-                }
-                extension_indices[location].main(req, res)
-            }
-            else {
-                res.writeHead(404)
-                res.end()
-            }
-        })
+    if (location.includes('.') || location.startsWith('~') || location == 'keuknet-client') {
+        handleStatic(req, res, location)
     }
     else {
-        // Templated html
-        if (location.startsWith('~')) {
-            cuts.end_nj(req, res, 'content/'+location.split('~')[1])
+        handleEndpoint(req, res, location)
+    }
+}
+
+function handleEndpoint(req, res, location) {
+    // set request context
+    req.context = {...req.args}
+    req.context.extensions = [...extensions]
+    req.context.connected = req.ip.startsWith(ip_scope)
+
+    // Authenticate using user&pass, else using ip
+    data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
+        req.context.user = user
+        if (err) req.context.auth_err = err
+        if (user && user.is_admin) req.context.extensions.push('admin')
+
+        if (!location) location = user ? 'profile' : '~index'
+    
+        // Default endpoint
+        if (endpoints.includes(location)) {
+            indices[location].main(req, res)
         }
-        // Favicon
-        else if (favicons.includes(location)) {
-            var filetype = 
-            fetch.file(`favicons${req.url}`, function (data, err) {
-                if (err) {
-                    res.writeHead(404)
+        // Extension
+        else if (req.context.extensions.includes(location)) {
+            // If login required
+            if (!user && extension_indices[location].requires_login(req.path)) {
+                    res.writeHead(307, {Location: "/login"})
                     res.end()
                     return
-                }
-                res.writeHead(200, content[filetype])
-                res.end(data)
-            })
+            }
+            extension_indices[location].main(req, res)
         }
-        // if location is a file
         else {
-            var filetype = req.url.split('.').pop()
-            fetch.file(req.url, function (data, err) {
-                if (err) {
-                    res.writeHead(404)
-                    res.end()
-                    return
-                }
-                res.writeHead(200, content[filetype])
-                res.end(data)
-            })
+            handleStatic(req, res, location)
         }
+    })
+}
+
+function handleStatic(req, res, location) {
+    var filetype = location.split('.')[1]
+    // Templated html
+    if (location.startsWith('~')) {
+        cuts.end_nj(req, res, 'content/'+location.split('~')[1])
+    }
+    // Favicon
+    else if (favicons.includes(location)) {
+        fetch.file(`favicons${req.url}`, function (data, err) {
+            if (err) {
+                res.writeHead(404)
+                res.end()
+                return
+            }
+            res.writeHead(200, content[filetype])
+            res.end(data)
+        })
+    }
+    // if location is a file
+    else {
+        fetch.file(req.url, function (data, err) {
+            if (err) {
+                res.writeHead(404)
+                res.end()
+                return
+            }
+            res.writeHead(200, content[filetype])
+            res.end(data)
+        })
     }
 }
