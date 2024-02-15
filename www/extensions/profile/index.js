@@ -1,5 +1,5 @@
 exports.requires_login = function (path) {
-    if (path == ['getconf']) {
+    if (path.at(0) == 'getconf') {
         return false
     }
     return true
