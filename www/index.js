@@ -13,9 +13,10 @@ var extensions = [
 
 var indices = {}
 var extension_indices = {}
-var fetch, content, favicons, data, ip_scope, cuts, nj
+var fetch, content, favicons, data, ip_scope, cuts
 exports.init = function (global) {
-    ({fetch,content,favicons,data,ip_scope,cuts,nj} = global)
+    ({fetch,content,favicons,data,ip_scope,cuts,nj,dicebear_host} = global)
+    nj.addGlobal('dicebear_host', dicebear_host)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
@@ -30,6 +31,7 @@ exports.init = function (global) {
 
 exports.main = function (req, res) {
     var location = req.path.shift()
+    location = location == '' ? 'index' : location
 
     if (location.includes('.') || location.startsWith('~') || location == 'keuknet-client') {
         handleStatic(req, res, location)
@@ -50,8 +52,6 @@ function handleEndpoint(req, res, location) {
         req.context.user = user
         if (err) req.context.auth_err = err
         if (user && user.is_admin) req.context.extensions.push('admin')
-
-        if (!location) location = user ? 'profile' : '~index'
     
         // Default endpoint
         if (endpoints.includes(location)) {

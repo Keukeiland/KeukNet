@@ -6,4 +6,9 @@
             <a href="/{{ext}}">{{ext}}</a>
         {% endif %}
     {% endfor %}
+
+    <a href="/" class="{{'selected' if extension is not defined}} right">
+        <span>{{user.name}}</span>
+        <img src="https://{{dicebear_host}}/7.x/lorelei/svg?seed={{user.name}}" width="25px" height="25px">
+    </a>
 </section>
