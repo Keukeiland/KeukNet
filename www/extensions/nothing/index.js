@@ -1,23 +1,9 @@
-exports.requires_login = function (path) {
-    return true
-}
+module.exports = (Extension) => {return class extends Extension {
+    name = 'nothing'
+    title = 'Nothing'
+    dependencies = ['content','nj']
 
-var content, nj
-exports.init = function (global) {
-    ({content, nj} = global)
-}
-
-exports.main = function (req, res) {
-    req.context.extension = {
-        name: "Nothing"
+    handle(req, res) {
+        this.return_html(req, res, 'index')
     }
-    nj.render('nothing/index.html', req.context, function(err, data) {
-        if (err) {
-            res.writeHead(500)
-            res.end()
-            return
-        }
-        res.writeHead(200, content['html'])
-        res.end(data)
-    })
-}
+}}

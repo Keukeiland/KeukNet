@@ -3,6 +3,7 @@ const nj = require('nunjucks').configure(['www/templates','www/pages','www/exten
 
 /* import custom modules */
 const microfetch = require('./modules/microfetch')
+const Extension = require('./classes/extension.js').Extension
 const fetch = require('./modules/fetch')
 const data = require('./modules/data')
 const cuts = require('./modules/cuts')
@@ -41,6 +42,7 @@ exports.favicons = [
 exports.nj = nj
 
 exports.microfetch = microfetch
+exports.Extension = Extension
 exports.fetch = fetch
 exports.data = data
 exports.cuts = cuts

@@ -5,6 +5,12 @@
 {% endblock %}
 
 {% block body %}
+    {% if user.is_admin %}
+        <div class="options">
+            <a href="/servers/addserver">Add new server</a>
+        </div>
+    {% endif %}
+
     <div class="serverlist">
         {% for s in servers | reverse %}
             <div class="server">
