@@ -18,3 +18,5 @@ exports.server_cert_path = `${__dirname}/../certs/cert.pem`
 exports.ca_cert_path = `${__dirname}/../certs/ca.pem`
 /** Location of the temporary directory. Defaults to your system's default temp dir */
 exports.tmp_dir = tmpdir()
+/** The location where the dicebear instance is hosted */
+exports.dicebear_host = "api.dicebear.com"
