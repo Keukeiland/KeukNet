@@ -40,14 +40,14 @@ exports.Extension = class Extension {
         throw new Error(`Method 'handle()' must be implemented.`);
     }
 
-    return(res, err, err_code=500, location) {
+    return(res, err, location, err_code=500) {
         if (err) {
             res.writeHead(err_code)
             return res.end()
         }
         let code = 200
         let args = {}
-
+        
         if (location) {
             code = 307
             args['Location'] = location
@@ -83,5 +83,20 @@ exports.Extension = class Extension {
             res.writeHead(200, this.content[filetype])
             res.end(data)
         })
+    }
+
+    return_data(res, data, err, headers, err_code=404) {
+        if (err) {
+            res.writeHead(err_code)
+            return res.end()
+        }
+        let args = {"Content-Type": "text/plain charset utf-8"}
+
+        if (headers) {
+            args = headers
+        }
+        
+        res.writeHead(200, args)
+        return res.end(data)
     }
 }

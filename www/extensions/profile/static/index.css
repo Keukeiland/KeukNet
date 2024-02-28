@@ -1,11 +1,15 @@
 .content {
     display: flex;
     flex-wrap: wrap;
-    padding-left: 0;
+}
+
+.content h3 {
+    margin: var(--margin-small);
 }
 
 .content > .user {
     padding: var(--margin-normal);
+    padding-left: 0;
     min-width: 300px;
     flex-grow: 1;
 }
@@ -15,7 +19,7 @@
     border-left: 1px dashed black;
     min-width: 200px;
     max-width: 300px;
-    max-height: calc(var(--max-window-height) - 20px);
+    max-height: calc(var(--max-window-height) - var(--margin-large));
     flex-grow: 1;
     overflow-y: auto;
     background-color: inherit;

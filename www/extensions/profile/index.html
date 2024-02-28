@@ -13,7 +13,7 @@
 
     <section class="profiles">
         <div class="menu">
-            <a href="/profile/add" class="button">Create New</a>
+            <h3>Your devices</h3>
             <hr>
         </div>
         {% for p in profiles %}
@@ -22,7 +22,7 @@
                     {% if p.name %}
                         {{p.name}}
                     {% else %}
-                        Profile {{loop.index}}
+                        Device {{loop.index}}
                     {% endif %}
                 </p>
                 <p>{{p.uuid}}</p>
@@ -33,8 +33,9 @@
                 <hr>
             </div>
         {% else %}
-            <p>No profiles yet.</p>
+            <p>Here your linked devices will show up. To link your first device, click <kbd>Add New</kbd> and install it.</p>
         {% endfor %}
+            <a href="/profile/add" class="button" style="margin-bottom: var(--margin-normal);">Add New</a>
     </section>
 
 {% endblock %}
