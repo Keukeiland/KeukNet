@@ -32,8 +32,8 @@ body {
     background-repeat: no-repeat;
     height: 100vh;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
+    flex-wrap: nowrap;
     align-content: flex-start;
     font-family: 'Courier New', Courier, monospace;
 }
@@ -176,7 +176,6 @@ header > nav > a:hover {
     max-height: var(--max-window-height);
     max-width: var(--max-window-width);
     width: 100%;
-    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: var(--background-content);
