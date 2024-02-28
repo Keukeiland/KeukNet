@@ -5,6 +5,12 @@
 {% endblock %}
 
 {% block body %}
+    {% if user.is_admin %}
+        <div class="options">
+            <a href="/servers/addserver">Add new server</a>
+        </div>
+    {% endif %}
+
     <div class="serverlist">
         {% for s in servers | reverse %}
             <div class="server">
@@ -19,6 +25,9 @@
                     <a href="/servers?server={{s.id}}">...</a>
                 </p>
             </div>
+        {% else %}
+            <h3>This page is currently under development and will be available soon!</h3>
+            <p>No servers have been added yet, please check back later.</p>
         {% endfor %}
     </div>
 {% endblock %}

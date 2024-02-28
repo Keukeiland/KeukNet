@@ -7,29 +7,37 @@ var endpoints = [
     'register'
 ]
 var extensions = [
-    'profile','servers','nothing',
-    'admin'
+    'profile','servers','nothing','admin'
 ]
 
 var indices = {}
-var extension_indices = {}
-var fetch, content, favicons, data, ip_scope, cuts, nj
+var fetch, content, favicons, data, ip_scope
 exports.init = function (global) {
-    ({fetch,content,favicons,data,ip_scope,cuts,nj} = global)
+    ({fetch,content,favicons,data,ip_scope,nj,dicebear_host} = global)
+    nj.addGlobal('dicebear_host', dicebear_host)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
         indices[path].init(global)
     }
+    var extension_indices = {}
     for (path of extensions) {
-        extension_indices[path] = require(`./extensions/${path}/index.js`)
-        extension_indices[path].init(global)
+        ext = require(`./extensions/${path}/index.js`)
+        extension_indices[path] = new (ext(global.Extension))(global, `${__dirname}/extensions/${path}/`)
     }
-    extensions.splice(extensions.indexOf('admin'))
+    extensions = extension_indices
+    admin_extensions = {}
+    for (const ext of Object.keys(extensions)) {
+        if (extensions[ext].admin_only) {
+            admin_extensions[ext] = extensions[ext]
+            delete extensions[ext]
+        }
+    }
 }
 
 exports.main = function (req, res) {
     var location = req.path.shift()
+    location = location == '' ? 'index' : location
 
     if (location.includes('.') || location.startsWith('~') || location == 'keuknet-client') {
         handleStatic(req, res, location)
@@ -42,30 +50,35 @@ exports.main = function (req, res) {
 function handleEndpoint(req, res, location) {
     // set request context
     req.context = {...req.args}
-    req.context.extensions = [...extensions]
+    req.context.extensions = extensions
+    req.context.location = location
     req.context.connected = req.ip.startsWith(ip_scope)
 
     // Authenticate using user&pass, else using ip
     data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
         req.context.user = user
         if (err) req.context.auth_err = err
-        if (user && user.is_admin) req.context.extensions.push('admin')
-
-        if (!location) location = user ? 'profile' : '~index'
+        if (user && user.is_admin) req.context.extensions = {...req.context.extensions, ...admin_extensions}
     
         // Default endpoint
         if (endpoints.includes(location)) {
             indices[location].main(req, res)
         }
         // Extension
-        else if (req.context.extensions.includes(location)) {
+        else if (location in req.context.extensions) {
+            ext = req.context.extensions[location]
             // If login required
-            if (!user && extension_indices[location].requires_login(req.path)) {
+            if (!user && ext.requires_login(req.path)) {
                     res.writeHead(307, {Location: "/login"})
                     res.end()
                     return
             }
-            extension_indices[location].main(req, res)
+            if (user && !user.is_admin && ext.requires_admin(req.path)) {
+                res.writeHead(307, {Location: "/"})
+                res.end()
+                return
+            }
+            ext.handle_req(req, res)
         }
         else {
             handleStatic(req, res, location)
@@ -77,7 +90,16 @@ function handleStatic(req, res, location) {
     var filetype = location.split('.')[1]
     // Templated html
     if (location.startsWith('~')) {
-        cuts.end_nj(req, res, 'content/'+location.split('~')[1])
+        nj.render('content/'+location.split('~')[1]+'.html', req.context, function (err, data) {
+            if (err) {
+                res.writeHead(404)
+                res.end()
+                return
+            }
+            res.writeHead(200, content['html'])
+            res.end(data)
+            return
+        })
     }
     // Favicon
     else if (favicons.includes(location)) {

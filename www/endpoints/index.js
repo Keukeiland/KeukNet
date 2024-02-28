@@ -1,11 +1,11 @@
 var content, nj
 exports.init = function (global) {
-    ({content, nj} = global)
+    ({content,nj} = global)
 }
 
 exports.main = function (req, res) {
     if (!req.context.user) {
-        nj.render('index.html', req.context, function(err, data) {
+        nj.render('content/index.html', req.context, function(err, data) {
             if (err) {
                 res.writeHead(500)
                 res.end()
@@ -16,7 +16,14 @@ exports.main = function (req, res) {
         })
     }
     else {
-        res.writeHead(307, {Location:"/profile"})
-        res.end()
+        nj.render('content/user.html', req.context, function(err, data) {
+            if (err) {
+                res.writeHead(500)
+                res.end()
+                return
+            }
+            res.writeHead(200, content['html'])
+            res.end(data)
+        })
     }
 }

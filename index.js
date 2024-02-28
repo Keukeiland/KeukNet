@@ -15,7 +15,7 @@ const {
     domain, http_port, https_port,
     host, salt, private_key_path,
     server_cert_path, ca_cert_path,
-    tmp_dir
+    tmp_dir, dicebear_host
 } = require('./config/config')
 const wg_config = require('./config/wireguard')
 
@@ -23,8 +23,8 @@ const wg_config = require('./config/wireguard')
 const global = require('./global')
 global.salt = salt
 global.ip_scope = wg_config.subnet
+global.dicebear_host = dicebear_host
 const {fetch, data, log} = global
-global.cuts.init(global)
 
 // set up request handler
 const handle = require('./www/index')

@@ -1,0 +1,11 @@
+{% extends "extension.html" %}
+
+{% block body %}
+    <section class="user">
+        <h1>Hello {{user.name}}!</h1>
+        <img src="https://{{dicebear_host}}/7.x/lorelei/svg?seed={{user.name}}" width="125px" height="125px">
+        <p>^ Your pfp (can be changed later, still being worked on)</p>
+        <p>You registered at {{user.regdate}}</p>
+    </section>
+
+{% endblock %}

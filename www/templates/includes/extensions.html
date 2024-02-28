@@ -1,9 +1,10 @@
 <section class="extensions">
-    {% for ext in extensions %}
-        {% if extension.name|lower == ext %}
-            <a href="/{{ext}}" class="selected">{{ext}}</a>
-        {% else %}
-            <a href="/{{ext}}">{{ext}}</a>
-        {% endif %}
+    {% for _,ext in extensions %}
+        <a href="/{{ext.name}}" class="{{'selected' if ext.name == location}}">{{ext.title}}</a>
     {% endfor %}
+
+    <a href="/" class="{{'selected' if extension is not defined}} right">
+        <span>{{user.name}}</span>
+        <img src="https://{{dicebear_host}}/7.x/lorelei/svg?seed={{user.name}}" width="25px" height="25px">
+    </a>
 </section>

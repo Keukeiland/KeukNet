@@ -1,93 +1,45 @@
-exports.requires_login = function (path) {
-    return true
-}
+module.exports = (Extension) => {return class extends Extension {
+    name = 'servers'
+    title = 'Servers'
+    dependencies = ['data','content','nj','fetch']
 
-var content, nj, data, fetch
-exports.init = function (global) {
-    ({content, nj, data,microfetch} = global)
-    fetch = new microfetch.Fetch(__dirname)
-}
-
-exports.main = function (req, res) {
-    req.context.extension = {
-        name: "Servers"
+    requires_admin(path) {
+        if (path.at(0) == "addserver") {
+            return true
+        }
+        return false
     }
-    var location = req.path.shift()
-    if (!location) {
-        if (req.args.server) {
-            data.getServer(req.args.server, function (server, err) {
-                if (err) {
-                    res.writeHead(500)
-                    res.end()
-                    return
-                }
-                req.context.server = server
-                nj.render('servers/server.html', req.context, function(err, data) {
-                    if (err) {
-                        res.writeHead(500)
-                        res.end()
-                        return
-                    }
-                    res.writeHead(200, content['html'])
-                    res.end(data)
+
+    handle(req, res) {
+        var location = req.path.shift()
+
+        if (!location) {
+            if (req.args.server) {
+                this.data.getServer(req.args.server, (server, err) => {
+                    req.context.server = server
+                    this.return_html(req, res, 'server', err ?? !server)
                 })
+                return
+            }
+            this.data.getServers((servers, err) => {
+                req.context.servers = servers
+                this.return_html(req, res, 'serverlist', err)
             })
             return
         }
-        data.getServers(function (servers, err) {
-            req.context.servers = servers
-            nj.render('servers/serverlist.html', req.context, function(err, data) {
-                if (err) {
-                    res.writeHead(500)
-                    res.end()
-                    return
-                }
-                res.writeHead(200, content['html'])
-                res.end(data)
-            })
-        })
-        return
-    }
-    if (location == "addserver") {
-        if (req.context.user.is_admin) {
+        if (location == "addserver") {
             if (req.data) {
                 if (req.data.name && req.data.admin_id && req.data.description && req.data.ip) {
-                    data.addServer(req.data.name, req.data.admin_id, req.data.description, req.data.ip, req.data.url, function (err) {
-                        if (err) {
-                            res.writeHead(500)
-                            res.end()
-                            return
-                        }
-                        res.writeHead(200)
-                        res.end()
+                    this.data.addServer(req.data.name, req.data.admin_id, req.data.description, req.data.ip, req.data.url, (err) => {
+                        this.return(res, err)
                     })
                     return
                 }
             }
-            nj.render('servers/addserver.html', req.context, function(err, data) {
-                if (err) {
-                    res.writeHead(500)
-                    res.end()
-                    return
-                }
-                res.writeHead(200, content['html'])
-                res.end(data)
-            })
-            return
+            return this.return_html(req, res, 'addserver')
         }
-        res.writeHead(403)
-        res.end()
-        return
+        else {
+            return this.return_file(res, location)
+        }
     }
-    else {
-        fetch.file(location, function (data,filetype,err) {
-            if (err) {
-                res.writeHead(404)
-                res.end()
-                return
-            }
-            res.writeHead(200, content[filetype])
-            res.end(data)
-        })
-    }
-}
+}}
