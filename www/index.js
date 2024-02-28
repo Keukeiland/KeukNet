@@ -11,9 +11,9 @@ var extensions = [
 ]
 
 var indices = {}
-var fetch, content, favicons, data, ip_scope, cuts
+var fetch, content, favicons, data, ip_scope
 exports.init = function (global) {
-    ({fetch,content,favicons,data,ip_scope,cuts,nj,dicebear_host} = global)
+    ({fetch,content,favicons,data,ip_scope,nj,dicebear_host} = global)
     nj.addGlobal('dicebear_host', dicebear_host)
 
     for (path of endpoints) {
@@ -90,7 +90,16 @@ function handleStatic(req, res, location) {
     var filetype = location.split('.')[1]
     // Templated html
     if (location.startsWith('~')) {
-        cuts.end_nj(req, res, 'content/'+location.split('~')[1])
+        nj.render('content/'+location.split('~')[1]+'.html', req.context, function (err, data) {
+            if (err) {
+                res.writeHead(404)
+                res.end()
+                return
+            }
+            res.writeHead(200, content['html'])
+            res.end(data)
+            return
+        })
     }
     // Favicon
     else if (favicons.includes(location)) {

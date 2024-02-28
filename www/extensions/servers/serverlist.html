@@ -25,6 +25,9 @@
                     <a href="/servers?server={{s.id}}">...</a>
                 </p>
             </div>
+        {% else %}
+            <h3>This page is currently under development and will be available soon!</h3>
+            <p>No servers have been added yet, please check back later.</p>
         {% endfor %}
     </div>
 {% endblock %}
