@@ -7,6 +7,7 @@ Below is a simple tutorial on how to get the server up and running.
 ### Collect source code
 `git clone https://github.com/keukeiland/keuknet`  
 `cd keuknet`
+`git checkout v2.x.x`
 
 ### Configure
 `cp config/config.js.example config/config.js`  

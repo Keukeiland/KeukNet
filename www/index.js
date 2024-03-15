@@ -13,17 +13,18 @@ var extensions = [
 var indices = {}
 var fetch, content, favicons, data, ip_scope
 exports.init = function (global) {
-    ({fetch,content,favicons,data,ip_scope,nj,dicebear_host} = global)
+    ({fetch,content,favicons,data,ip_scope,nj,dicebear_host,db} = global)
     nj.addGlobal('dicebear_host', dicebear_host)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
         indices[path].init(global)
     }
+
     var extension_indices = {}
     for (path of extensions) {
-        ext = require(`./extensions/${path}/index.js`)
-        extension_indices[path] = new (ext(global.Extension))(global, `${__dirname}/extensions/${path}/`)
+        let ext = new ((require(`./extensions/${path}/index.js`))(global.Extension))(global, `${__dirname}/extensions/${path}/`, `${__dirname}/../data/${path}/`)
+        extension_indices[path] = ext
     }
     extensions = extension_indices
     admin_extensions = {}

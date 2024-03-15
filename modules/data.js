@@ -4,11 +4,10 @@
  */
 const crypto = require('crypto')
 const sqlite3 = require('sqlite3').verbose()
-const wg = require('./data/wireguard')
 
 var db
 var salt
-exports.init = function(path, saltq, wg_config, tmp_path, callback) {
+exports.init = function(path, saltq, callback) {
     db = new sqlite3.Database(path+'db.sqlite')
     salt = saltq
     // intentionally NOT catching errors
@@ -24,37 +23,15 @@ exports.init = function(path, saltq, wg_config, tmp_path, callback) {
         `)
     db.run(`
     CREATE TABLE IF NOT EXISTS
-    profile (
+    db_table_versions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        name VARCHAR,
-        uuid CHAR(36) NOT NULL,
-        ip VARCHAR NOT NULL,
-        installed BOOLEAN NOT NULL DEFAULT FALSE CHECK (installed IN (0,1)),
-        special BOOLEAN NOT NULL DEFAULT FALSE CHECK (special IN (0,1)),
-        CONSTRAINT fk_user_id
-            FOREIGN KEY (user_id)
-                REFERENCES user(id)
-        )
-        `)
-    db.run(`
-    CREATE TABLE IF NOT EXISTS
-    server (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        admin_id INTEGER NOT NULL,
-        name VARCHAR NOT NULL,
-        description TEXT NOT NULL,
-        ip VARCHAR NOT NULL,
-        url VARCHAR,
-        CONSTRAINT fk_admin_id
-            FOREIGN KEY (admin_id)
-                REFERENCES user(id)
-        )
-        `)
-    wg.init(path+"wireguard/", wg_config, tmp_path, function (err) {
-        return callback(err)
-    })
+        table_id VARCHAR NOT NULL,
+        version INTEGER NOT NULL DEFAULT 1
+    )
+    `)
+    return callback(undefined)
 }
+exports.db = () => {return db}
 
 function __decrypt_auth(auth, callback) {
     if (!auth) {
@@ -79,19 +56,6 @@ function __exists(name, callback) {
     })
 }
 
-function __owns(user, uuid, callback) {
-    db.get("SELECT EXISTS(SELECT 1 FROM profile WHERE user_id=$id AND uuid=$uuid)", [user.id,uuid], function (err, result) {
-        return callback(!!Object.values(result)[0], err)
-    })
-}
-exports.owns = __owns
-
-function __getHighestUserID(callback) {
-    db.get("SELECT MAX(id) FROM profile WHERE special = FALSE", function (err, data) {
-        return callback(data['MAX(id)'], err)
-    })
-}
-
 
 exports.addUser = function (auth, callback) {
     __decrypt_auth(auth, function (name, password, err) {
@@ -104,51 +68,6 @@ exports.addUser = function (auth, callback) {
             db.run("INSERT INTO user(name,password) VALUES($name,$password)", [name, password], function (err) {
                 return callback(err)
             })
-        })
-    })
-}
-
-exports.addProfile = function (user, callback) {
-    uuid = crypto.randomUUID()
-
-    __getHighestUserID(function (id, err) {
-        if (err) return callback(err)
-        wg.create(uuid, id+2, function (ip, err) {
-            if (err) return callback(err)
-            db.run("INSERT INTO profile(user_id,uuid,ip) VALUES($id,$uuid,$ip)", [user.id, uuid, ip], function (err) {
-                if (err) return callback(err)
-                return callback()
-            })
-        })
-    })
-}
-
-exports.deleteProfile = function (user, uuid, callback) {
-    __owns(user, uuid, function (user_owns, err) {
-        if (!user_owns) return callback(err)
-        db.run("DELETE FROM profile WHERE uuid=$uuid", [uuid], function (err) {
-            if (err) return callback(err)
-            wg.delete(uuid, function () {
-                return callback()
-            })
-        })
-    })
-}
-
-exports.renameProfile = function (user, uuid, name, callback) {
-    __owns(user, uuid, function (user_owns, err) {
-        if (!user_owns) return callback(err)
-        db.run("UPDATE profile SET name=$name WHERE uuid=$uuid", [name,uuid], function (err) {
-            return callback(err)
-        })
-    })
-}
-
-exports.getConf = function (uuid, callback) {
-    wg.getConfig(uuid, function (data, err) {
-        if (err) return callback(undefined, err)
-        db.run("UPDATE profile SET installed=TRUE WHERE uuid=$uuid", [uuid], function (err) {
-            return callback(data, err)
         })
     })
 }
@@ -175,29 +94,5 @@ exports.authenticate = function (auth, ip, ip_scope, callback) {
             }
             return callback(undefined, err)
         })
-    })
-}
-
-exports.getProfiles = function (id, callback) {
-    db.all("SELECT * FROM profile WHERE user_id=$id", id, function (err, profiles) {
-        return callback(profiles, err)
-    })
-}
-
-exports.getServers = function (callback) {
-    db.all("SELECT * FROM server", function (err, servers) {
-        return callback(servers, err)
-    })
-}
-exports.getServer = function (id, callback) {
-    db.get("SELECT * FROM server WHERE id=$id", id, function (err, server) {
-        return callback(server, err)
-    })
-}
-
-exports.addServer = function (name, admin_id, description, ip, url, callback) {
-    db.run("INSERT INTO server(name,admin_id,description,ip,url) VALUES($name,$admin_id,$description,$ip,$url)", [name,admin_id,description,ip,url], function (err) {
-        if (err) return callback(err)
-        return callback()
     })
 }

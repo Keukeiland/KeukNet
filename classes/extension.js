@@ -1,5 +1,6 @@
-exports.Extension = class Extension {
+module.exports = class Extension {
     admin_only = false
+    tables = false
     dependencies = []
 
     constructor(global, path) {
@@ -8,6 +9,7 @@ exports.Extension = class Extension {
         }
         // Runs after child has been constructed
         setTimeout(() => {
+            // Init dependencies
             for (const dep of this.dependencies) {
                 if (dep != 'fetch') {
                     this[dep] = global[dep]
@@ -15,6 +17,13 @@ exports.Extension = class Extension {
                 else {
                     this['fetch'] = new global.microfetch.Fetch(path)
                 }
+            }
+            // Init db
+            if (this.tables) {
+                // create interface
+                this.db = new global.DB(global.db(), this.name)
+                // init tables
+                new ((require(`${path}tables`))(global.Tables))(global.db(), this.db, this.name)
             }
         }, 0)
     }

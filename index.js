@@ -11,33 +11,37 @@ const http = require('http')
 require('dotenv').config()
 
 // import config values
+let config = require('./config/config')
 const {
     domain, http_port, https_port,
     host, salt, private_key_path,
     server_cert_path, ca_cert_path,
     tmp_dir, dicebear_host
-} = require('./config/config')
-const wg_config = require('./config/wireguard')
+} = config
+let wg_config = require('./config/wireguard')
 
 // set up global context
 const global = require('./global')
 global.salt = salt
 global.ip_scope = wg_config.subnet
 global.dicebear_host = dicebear_host
+global.config = config
+global.wg_config = wg_config
 const {fetch, data, log} = global
 
-// set up request handler
+// get request handler
 const handle = require('./www/index')
-handle.init(Object.freeze(global))
 
 // set up modules
 fetch.init(`${__dirname}/www/static/`)
 log.status("Initializing database")
-data.init(`${__dirname}/data/`, salt, wg_config, tmp_dir, function (err) {
+data.init(`${__dirname}/data/`, salt, function (err) {
     if (err) {
         log.err(err)
     }
     log.status("Database initialized")
+    // set up request handler
+    handle.init(Object.freeze(global))
 })
 
 // fetch https encryption keys
