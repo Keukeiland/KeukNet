@@ -11,10 +11,10 @@ var extensions = [
 ]
 
 var indices = {}
-var fetch, content, favicons, data, ip_scope
+var fetch, content, favicons, data, wg_config
 exports.init = function (global) {
-    ({fetch,content,favicons,data,ip_scope,nj,dicebear_host,db} = global)
-    nj.addGlobal('dicebear_host', dicebear_host)
+    ({fetch,content,favicons,data,wg_config,nj,config,db} = global)
+    nj.addGlobal('dicebear_host', config.dicebear_host)
 
     for (path of endpoints) {
         indices[path] = require('./endpoints/'+path)
@@ -53,10 +53,10 @@ function handleEndpoint(req, res, location) {
     req.context = {...req.args}
     req.context.extensions = extensions
     req.context.location = location
-    req.context.connected = req.ip.startsWith(ip_scope)
+    req.context.connected = req.ip.startsWith(wg_config.ip_scope)
 
     // Authenticate using user&pass, else using ip
-    data.authenticate(req.headers.authorization, req.ip, ip_scope, function (user, err) {
+    data.authenticate(req.headers.authorization, req.ip, wg_config.ip_scope, function (user, err) {
         req.context.user = user
         if (err) req.context.auth_err = err
         if (user && user.is_admin) req.context.extensions = {...req.context.extensions, ...admin_extensions}
