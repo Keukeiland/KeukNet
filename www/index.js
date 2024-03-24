@@ -7,7 +7,7 @@ var endpoints = [
     'register'
 ]
 var extensions = [
-    'profile','servers','nothing','admin'
+    'profile','servers','nothing','admin','chat'
 ]
 
 var indices = {}

@@ -24,6 +24,7 @@ const {fetch, data, log} = global
 const handle = require('./www/index')
 
 // set up modules
+log.init(config.logging)
 fetch.init(`${__dirname}/www/static/`)
 log.status("Initializing database")
 data.init(`${__dirname}/data/`, config.salt, function (err) {

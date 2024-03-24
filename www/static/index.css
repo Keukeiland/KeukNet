@@ -46,7 +46,12 @@ code {
     padding-right: 0.5em;
     word-break: break-all;
 }
-.button {
+a,
+a:visited {
+    color: var(--color-link);
+}
+.button,
+.button:visited {
     background-color: rgb(221, 221, 221);
     padding: 5px 10px;
     border-radius: var(--margin-small);

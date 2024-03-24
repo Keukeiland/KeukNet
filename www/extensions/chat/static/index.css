@@ -1,0 +1,62 @@
+.content {
+    padding: var(--margin-normal);
+    display: flex;
+}
+.content > .chat {
+    margin: auto;
+    max-width: 650px;
+    width: 100%;
+}
+.content #messages {
+    background-color: white;
+    border-top-left-radius: var(--margin-small);
+    border-bottom-left-radius: var(--margin-small);
+    border: solid 2px darkgrey;
+    margin-bottom: var(--margin-normal);
+    width: 100%;
+    display: flex;
+    overflow-y: scroll;
+    scroll-snap-type: y proximity;
+    max-height: 500px;
+    flex-direction: column-reverse;
+}
+.content #messages tr:last-child {
+    scroll-snap-align: end;
+}
+.content #messages tr td {
+    text-align: start;
+}
+.content #messages tr :nth-child(1) {
+    font-style: italic;
+    width: 0;
+    padding-right: var(--margin-small);
+}
+.content #messages tr :nth-child(2) {
+    font-weight: bold;
+    width: 0;
+    padding-right: var(--margin-small);
+}
+.content #messages tr :nth-child(3) {
+    word-break: break-all;
+}
+
+.content form {
+    display: flex;
+    flex-wrap: nowrap;
+}
+.content form > input {
+    background-color: silver;
+    border-radius: var(--margin-small);
+    border: solid 2px darkgrey;
+    outline: none;
+}
+.content form > input:focus {
+    background-color: rgb(221, 221, 221);
+}
+.content form > input[type=text] {
+    width: 100%;
+    margin-right: var(--margin-small);
+}
+.content form > input[type=submit] {
+    width: fit-content;
+}

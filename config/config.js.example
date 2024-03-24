@@ -13,6 +13,8 @@ exports.salt = "Password salt here!"
 exports.tmp_dir = tmpdir()
 /** The location where the dicebear instance is hosted */
 exports.dicebear_host = "api.dicebear.com"
+/** Whether connections are logged */
+exports.logging = false
 
 // Below options are only required when running standalone
 /** The port to listen on for HTTPS traffic. Defaults to 443 */
