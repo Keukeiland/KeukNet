@@ -13,11 +13,13 @@ require('dotenv').config()
 // import config values
 let config = require('./config/config')
 let wg_config = require('./config/wireguard')
+let texts = require('./config/texts')
 
 // set up global context
 const global = require('./global')
 global.config = config
 global.wg_config = wg_config
+global.texts = texts
 const {fetch, data, log} = global
 
 // get request handler

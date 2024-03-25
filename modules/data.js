@@ -10,25 +10,6 @@ var salt
 exports.init = function(path, saltq, callback) {
     db = new sqlite3.Database(path+'db.sqlite')
     salt = saltq
-    // intentionally NOT catching errors
-    db.run(`
-    CREATE TABLE IF NOT EXISTS
-    user (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR NOT NULL,
-        password VARCHAR NOT NULL,
-        regdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        is_admin BOOLEAN NOT NULL DEFAULT FALSE CHECK (is_admin IN (0,1))
-        )
-        `)
-    db.run(`
-    CREATE TABLE IF NOT EXISTS
-    db_table_versions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_id VARCHAR NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1
-    )
-    `)
     return callback(undefined)
 }
 exports.db = () => {return db}

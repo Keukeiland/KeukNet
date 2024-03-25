@@ -12,6 +12,7 @@ Below is a simple tutorial on how to get the server up and running.
 ### Configure
 `cp config/config.js.example config/config.js`  
 `cp config/wireguard.js.example config/wireguard.js`  
+`cp config/texts.js.example config/texts.js`  
 Now edit both `config/config.js` and `config/wireguard.js` to your taste.
 
 ### Install
