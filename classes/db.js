@@ -36,24 +36,24 @@ module.exports = class DB {
     }
 
     // Column modifications
-    addColumn = (table, column) => {
+    addColumn = (table, column, callback) => {
         table = this.__formatTableName(table)
-        this.db.run(`ALTER TABLE ${table} ADD ${column}`, [], (err) => {
-            if (err) throw new Error(`Failed adding column ${column} to ${table}. ${err}`)
+        this.db.run(`ALTER TABLE ${table} ADD COLUMN ${column}`, [], (err) => {
+            callback(err)
         })
     }
 
-    dropColumn = (table, column) => {
+    dropColumn = (table, column, callback) => {
         table = this.__formatTableName(table)
         this.db.run(`ALTER TABLE ${table} DROP COLUMN ${column}`, [], (err) => {
-            if (err) throw new Error(`Failed dropping column ${column} from ${table}. ${err}`)
+            callback(err)
         })
     }
 
-    renameColumn = (table, old_column, new_column) => {
+    renameColumn = (table, old_column, new_column, callback) => {
         table = this.__formatTableName(table)
         this.db.run(`ALTER TABLE ${table} RENAME COLUMN ${old_column} to ${new_column}`, [], (err) => {
-            if (err) throw new Error(`Failed renaming column ${old_column} to ${new_column} at table ${table}. ${err}`)
+            callback(err)
         })
     }
     

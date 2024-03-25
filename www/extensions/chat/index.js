@@ -3,7 +3,7 @@ module.exports = (Extension) => {return class extends Extension {
     title = 'Chat'
     dependencies = ['content','nj','fetch']
     messages = [{
-        name: 'SYSTEM',
+        user: {name:'SYSTEM',pfp_code:'seed=SYSTEM'},
         time:(new Date()).toLocaleTimeString('en-US', {hour12: false}),
         content: 'Welcome to the chatroom!'
     }]
@@ -20,7 +20,7 @@ module.exports = (Extension) => {return class extends Extension {
                 var message = req.data.message.substring(0,255)
                 var now = (new Date()).toLocaleTimeString('en-US', {hour12: false})
                 this.messages.push({
-                    name: req.context.user.name,
+                    user: {name:req.context.user.name, pfp_code:req.context.user.pfp_code},
                     time: now,
                     content: message
                 })
@@ -33,6 +33,18 @@ module.exports = (Extension) => {return class extends Extension {
             var part = this.last_got_id.hasOwnProperty(req.context.user.id) ? this.last_got_id[req.context.user.id] : 0
             this.last_got_id[req.context.user.id] = this.messages.length
             return this.return_data(res, `{"messages":${JSON.stringify(this.messages.slice(part))}}`)
+        }
+        else if (location == 'postmessage') {
+            if (req.data && req.data.message) {
+                var message = req.data.message.substring(0,255)
+                var now = (new Date()).toLocaleTimeString('en-US', {hour12: false})
+                this.messages.push({
+                    user: {name:req.context.user.name, pfp_code:req.context.user.pfp_code},
+                    time: now,
+                    content: message
+                })
+            }
+            return this.return(res)
         }
         else {
             return this.return_file(res, location)

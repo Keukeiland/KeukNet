@@ -1,6 +1,6 @@
 module.exports = (Tables) => {return class extends Tables {
     tables = {
-        'user': 0,
+        'user': 1,
         'db_table_versions': 0
     }
 
@@ -13,6 +13,17 @@ module.exports = (Tables) => {return class extends Tables {
                 'regdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL',
                 'is_admin BOOLEAN NOT NULL DEFAULT FALSE CHECK (is_admin IN (0,1))',
             ])
+        },
+        1:()=>{
+            this.db.select('user', ['id','name'], null, null, [], (err, data) => {
+                if(err)console.log(err)
+                this.db.addColumn('user', 'pfp_code TEXT', (err) => {
+                    if(err)console.log(err)
+                    for (const user of data) {
+                        this.db.update('user', ['pfp_code=$name'], 'id=$id', [`seed=${user.name}`, user.id], (err)=>{if(err)console.log(err)})
+                    }
+                })
+            })
         }
     }
     db_table_versions = {

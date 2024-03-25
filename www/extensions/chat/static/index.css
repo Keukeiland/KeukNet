@@ -27,16 +27,21 @@
     text-align: start;
 }
 .content #messages tr :nth-child(1) {
+    width: 35px;
+    height: 35px;
+    margin: -15px 0;
+}
+.content #messages tr :nth-child(2) {
     font-style: italic;
     width: 0;
     padding-right: var(--margin-small);
 }
-.content #messages tr :nth-child(2) {
+.content #messages tr :nth-child(3) {
     font-weight: bold;
     width: 0;
     padding-right: var(--margin-small);
 }
-.content #messages tr :nth-child(3) {
+.content #messages tr :nth-child(4) {
     word-break: break-all;
 }
 
