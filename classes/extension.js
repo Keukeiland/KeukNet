@@ -71,7 +71,6 @@ module.exports = class Extension {
         this.nj.renderString(
             '{% extends "layout.html" %}{% block body %}{{__render_item |safe}}{% endblock %}',
             req.context, (err, data) => {
-                console.log(err, data)
                 if (err) {
                     res.writeHead(500)
                     return res.end()
