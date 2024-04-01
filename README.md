@@ -7,10 +7,12 @@ Below is a simple tutorial on how to get the server up and running.
 ### Collect source code
 `git clone https://github.com/keukeiland/keuknet`  
 `cd keuknet`
+`git checkout v2.x.x`
 
 ### Configure
 `cp config/config.js.example config/config.js`  
 `cp config/wireguard.js.example config/wireguard.js`  
+`cp config/texts.js.example config/texts.js`  
 Now edit both `config/config.js` and `config/wireguard.js` to your taste.
 
 ### Install

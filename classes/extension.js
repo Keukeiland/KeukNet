@@ -1,5 +1,6 @@
-exports.Extension = class Extension {
+module.exports = class Extension {
     admin_only = false
+    tables = false
     dependencies = []
 
     constructor(global, path) {
@@ -8,6 +9,7 @@ exports.Extension = class Extension {
         }
         // Runs after child has been constructed
         setTimeout(() => {
+            // Init dependencies
             for (const dep of this.dependencies) {
                 if (dep != 'fetch') {
                     this[dep] = global[dep]
@@ -15,6 +17,13 @@ exports.Extension = class Extension {
                 else {
                     this['fetch'] = new global.microfetch.Fetch(path)
                 }
+            }
+            // Init db
+            if (this.tables) {
+                // create interface
+                this.db = new global.DB(global.db(), this.name)
+                // init tables
+                new ((require(`${path}tables`))(global.Tables))(global.db(), this.db, this.name)
             }
         }, 0)
     }
@@ -57,18 +66,34 @@ exports.Extension = class Extension {
         return res.end()
     }
 
-    return_html(req, res, item, err, err_code=500) {
+    return_text(req, res, item) {
+        req.context.__render_item = this.texts[item]
+        this.nj.renderString(
+            '{% extends "layout.html" %}{% block body %}{{__render_item |safe}}{% endblock %}',
+            req.context, (err, data) => {
+                if (err) {
+                    res.writeHead(500)
+                    return res.end()
+                }
+                res.writeHead(200, this.content['html'])
+                return res.end(data)
+        })
+    }
+
+    return_html(req, res, item, err, err_code=500, success_code=200, headers=null) {
         if (err) {
             res.writeHead(err_code)
             return res.end()
         }
 
+        headers = {...this.content['html'], ...headers}
+
         this.nj.render(this.name+'/'+item+'.html', req.context, (err, data) => {
             if (err) {
-                res.writeHead(500)
+                res.writeHead(err_code)
                 return res.end()
             }
-            res.writeHead(200, this.content['html'])
+            res.writeHead(success_code, headers)
             return res.end(data)
         })
     }

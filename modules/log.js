@@ -1,3 +1,8 @@
+var we_logging
+exports.init = function(we_log) {
+    we_logging = we_log
+}
+
 function __mask_ip(ip) {
     let tmp = ""
     // if IPv4
@@ -27,19 +32,23 @@ function __mask_url(url) {
 }
 
 exports.con = function(req) {
-    ip = __mask_ip(req.ip)
-    url = __mask_url(req.url)
-    console.log(
-        `\x1b[32m    [${ip}]=>'${req.method} ${url}
-        HTTP/${req.httpVersion} ${req.headers['user-agent'].split(" ",1)[0]} ${req.headers.authorization? "auth" : "noauth"}\x1b[0m`
-    )
+    if (we_logging) {
+        ip = __mask_ip(req.ip)
+        url = __mask_url(req.url)
+        console.log(
+            `\x1b[32m    [${ip}]=>'${req.method} ${url}
+            HTTP/${req.httpVersion} ${req.headers['user-agent'].split(" ",1)[0]} ${req.headers.authorization? "auth" : "noauth"}\x1b[0m`
+        )
+    }
 }
 
 exports.con_err = function(req) {
-    ip = __mask_ip(req.ip)
-    console.log(
-        `\x1b[35m  DEN[${ip}]: '${req.headers.host}'\x1b[0m`
-    )
+    if (we_logging) {
+        ip = __mask_ip(req.ip)
+        console.log(
+            `\x1b[35m  DEN[${ip}]: '${req.headers.host}'\x1b[0m`
+        )
+    }
 }
 
 exports.status = function(msg) {

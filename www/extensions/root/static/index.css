@@ -46,7 +46,12 @@ code {
     padding-right: 0.5em;
     word-break: break-all;
 }
-.button {
+a,
+a:visited {
+    color: var(--color-link);
+}
+.button,
+.button:visited {
     background-color: rgb(221, 221, 221);
     padding: 5px 10px;
     border-radius: var(--margin-small);
@@ -57,6 +62,7 @@ code {
     box-shadow: 0 0 2px black;
     text-decoration: none;
     color: black;
+    margin-left: 2px;
 }
 .button:hover {
     background-color: darkgrey;
@@ -113,6 +119,9 @@ header > nav > a {
 header > nav > a:hover {
     background-color: rgba(0,0,0,0.1);
     text-decoration: underline dotted rgba(0,0,0,0.9);
+}
+header > nav > a:visited {
+    color: black;
 }
 
 .main {

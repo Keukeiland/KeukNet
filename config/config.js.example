@@ -1,20 +1,27 @@
 const {tmpdir} = require('os')
-
+/** Whether the server is running behind an nginx instance */
+exports.nginx = false
 /** The domain of the instance. */
 exports.domain = "example.com"
 /** The interface to host on. Defaults to '::' (all interfaces) */
 exports.host = "::"
-/** The port to listen on for HTTPS traffic. Defaults to 443 */
-exports.https_port = 443
 /** The port to listen on for HTTP traffic. Defaults to 80 */
 exports.http_port = 80
 /** The salt to use for encrypting the passwords. */
 exports.salt = "Password salt here!"
+/** Location of the temporary directory. Defaults to your system's default temp dir */
+exports.tmp_dir = tmpdir()
+/** The location where the dicebear instance is hosted */
+exports.dicebear_host = "api.dicebear.com"
+/** Whether connections are logged */
+exports.logging = false
+
+// Below options are only required when running standalone
+/** The port to listen on for HTTPS traffic. Defaults to 443 */
+exports.https_port = 443
 /** The path to your HTTPS certificate-set's private key. */
 exports.private_key_path = `${__dirname}/../certs/privkey.pem`
 /** The path to your HTTPS certificate-set's certificate. */
 exports.server_cert_path = `${__dirname}/../certs/cert.pem`
 /** The path to your HTTPS certificate-set's CA-chain. */
 exports.ca_cert_path = `${__dirname}/../certs/ca.pem`
-/** Location of the temporary directory. Defaults to your system's default temp dir */
-exports.tmp_dir = tmpdir()
