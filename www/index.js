@@ -11,6 +11,7 @@ var data, wg_config
 exports.init = function (global) {
     ({data,wg_config,texts,nj,config} = global)
     nj.addGlobal('dicebear_host', config.dicebear_host)
+    nj.addGlobal('client_location', config.client_location)
 
     root = new ((require(`./extensions/root/index.js`))(global.Extension))(global, `${__dirname}/extensions/root/`, `${__dirname}/../data/root/`)
 

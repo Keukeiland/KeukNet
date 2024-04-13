@@ -1,4 +1,5 @@
 const {tmpdir} = require('os')
+
 /** Whether the server is running behind an nginx instance */
 exports.nginx = false
 /** The domain of the instance. */
@@ -13,6 +14,8 @@ exports.salt = "Password salt here!"
 exports.tmp_dir = tmpdir()
 /** The location where the dicebear instance is hosted */
 exports.dicebear_host = "api.dicebear.com"
+/** The location where the client files are hosted */
+exports.client_location = "https://github.com/keukeiland/keuknet-client/releases/latest/download/"
 /** Whether connections are logged */
 exports.logging = false
 

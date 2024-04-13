@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=KeukNet Connection Handler
-Exec=/usr/bin/keuknet.py %u
-Terminal=true
-StartupNotify=false
-MimeType=x-scheme-handler/keuknet;
