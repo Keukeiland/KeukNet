@@ -27,7 +27,7 @@
                 </p>
                 <p>{{p.uuid}}</p>
                 <p>IP: {{p.ip}}</p>
-                <a href="/profile/install?uuid={{p.uuid}}" class="{{'disabled' if p.installed}}button">Install</a>
+                <a href="/profile/install?uuid={{p.uuid}}" class="button {{'disabled' if p.installed}}">Install</a>
                 <a href="/profile/rename?uuid={{p.uuid}}" class="button">Rename</a>
                 <a href="/profile/delete?uuid={{p.uuid}}" class="button">Delete</a>
                 <hr>
