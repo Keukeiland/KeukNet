@@ -59,7 +59,7 @@ exports.authenticate = function (auth, ip, ip_scope, callback) {
         if (err) {
             if (ip.startsWith(ip_scope)) {
                 // Try using IP-address if no name and password
-                db.get("SELECT u.* FROM user u JOIN profile p ON p.user_id = u.id WHERE p.ip=$ip", ip, function (err, user) {
+                db.get("SELECT u.* FROM user u JOIN _profile_device p ON p.user_id = u.id WHERE p.ip=$ip", ip, function (err, user) {
                     return callback(user, err)
                 })
                 return
