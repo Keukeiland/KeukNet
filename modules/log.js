@@ -37,7 +37,7 @@ exports.con = function(req) {
         url = __mask_url(req.url)
         console.log(
             `\x1b[32m    [${ip}]=>'${req.method} ${url}
-            HTTP/${req.httpVersion} ${req.headers['user-agent'].split(" ",1)[0]} ${req.headers.authorization? "auth" : "noauth"}\x1b[0m`
+            HTTP/${req.httpVersion} ${(req.headers['user-agent'] ?? "NULL").split(" ",1)[0]} ${req.headers.authorization? "auth" : "noauth"}\x1b[0m`
         )
     }
 }
@@ -57,4 +57,8 @@ exports.status = function(msg) {
 
 exports.err = function(err) {
     console.log(`\x1b[31m>> ${err}\x1b[0m`)
+}
+
+exports.serverStart = function(type, domain, host, port) {
+    console.log(`\x1b[1m${type.toUpperCase()} server running on ${type}://${domain}:${port}, interface '${host}'\n\x1b[0m`)
 }
