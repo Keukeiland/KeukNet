@@ -6,7 +6,7 @@ exports.init = function(we_log) {
 function __mask_ip(ip) {
     let tmp = ""
     // if IPv4
-    if (ip.startsWith("::ffff:")) {
+    if (ip.includes('.')) {
         // strip 4to6 prefix
         ip = ip.substring(ip.lastIndexOf(':')+1,ip.length)
         // mask ip

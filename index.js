@@ -59,7 +59,7 @@ const requestListener = function (req, res) {
     // If behind NGINX
     } else {
         // get requesting IP
-        req.ip = req.headers['x-real-ip']
+        req.ip = req.headers['x-real-ip'] || '0.0.0.0'
     }
 
     // separate url arguments from the url itself
