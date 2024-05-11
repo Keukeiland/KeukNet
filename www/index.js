@@ -37,7 +37,6 @@ exports.main = function (req, res) {
     req.context = {...req.args}
     req.context.extensions = extensions
     req.context.location = location
-    req.context.connected = req.ip.startsWith(wg_config.subnet)
     
     // Authenticate using user&pass, else using ip
     data.authenticate(req.headers.authorization, req.ip, wg_config.subnet, function (user, err) {

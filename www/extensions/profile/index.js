@@ -5,10 +5,12 @@ module.exports = (Extension) => {return class extends Extension {
     dependencies = ['content','nj','fetch']
     crypto = require('crypto')
     wg = require('./wireguard')
+    wg_config = null
 
     constructor (global, path, data_path) {
         super(global, path)
         this.wg.init(data_path, global.wg_config, global.config.tmp_dir)
+        this.wg_config = global.wg_config
     }
 
 
@@ -26,6 +28,7 @@ module.exports = (Extension) => {return class extends Extension {
             case undefined: {
                 this.db.select('device', ['*'], 'user_id=$id', null, [req.context.user.id], (err, profiles) => {
                     req.context.profiles = profiles
+                    req.context.connected_ip = req.ip.startsWith(this.wg_config.subnet) ? req.ip : false
                     this.return_html(req, res, 'index', err)
                 })
                 break
