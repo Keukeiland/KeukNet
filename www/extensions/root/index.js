@@ -2,7 +2,7 @@ module.exports = (Extension) => {return class extends Extension {
     name = 'root'
     title = 'Home'
     tables = true
-    dependencies = ['content','nj','fetch','data','texts']
+    dependencies = ['content','nj','fetch','data','texts','cookie']
 
     constructor (global, path, config_path) {
         super(global, path)
@@ -25,67 +25,61 @@ module.exports = (Extension) => {return class extends Extension {
                 return this.return_html(req, res, 'user')
             }
             case 'login': {
-                // if invalid credentials display the error
+                // If user not logged in
                 if (!req.context.user) {
-                    let err = req.context.auth_err ?? new Error("Wrong name or password")
-                    // if cancelled return to home
-                    if (req.headers.cookie > 0 && err.message == "Quit early") {
-                        res.writeHead(307, {Location: "/", 'Set-Cookie': 0})
-                        return res.end()
+                    // Attempt
+                    if (req.data) {
+                        // Login
+                        if (req.data.login) {
+                            let auth = '';
+                            if (req.data.username && req.data.password) {
+                                auth = Buffer.from(req.data.username+":"+req.data.password).toString('base64')
+                            }
+                            return this.return_html(req, res, 'login', null, 500, 303, {
+                                "Location": "/login",
+                                "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
+                            })
+                        }
+                        // Register
+                        else if (req.data.register) {
+                            return this.data.addUser(req.data.username, req.data.password, (err) => {
+                                // if invalid credentials
+                                if (err) {
+                                    req.context.auth_err = err
+                                    return this.return_html(req, res, 'login', null)
+                                }
+                                // success
+                                else {
+                                    let auth = Buffer.from(req.data.username+":"+req.data.password).toString('base64')
+                                    return this.return_html(req, res, 'login', null, 500, 303, {
+                                        "Location": "/",
+                                        "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
+                                    })
+                                }
+                            })
+                        }
                     }
-                    if (req.headers.cookie >= 1 && req.headers.cookie%2 == 1) {
-                        req.context.err = err
-                        req.context.location = "/login"
-                        req.context.return = "/"
-                        return this.return_html(req, res, 'error', null, 500, 200, {'Set-Cookie': parseInt(req.headers.cookie)+1})
-                    }
-                    res.writeHead(401, {"WWW-Authenticate": `Basic`, 'Set-Cookie': parseInt(req.headers.cookie)+1})
-                    return res.end()
+                    // First load
+                    return this.return_html(req, res, 'login', null, 500, 200, {
+                        "Set-Cookie": this.del_cookie('auth')
+                    })
                 }
                 // if logged in
-                res.writeHead(307, {"Location": "/", 'Set-Cookie': 0})
+                res.writeHead(307, {"Location": "/"})
                 return res.end()
             }
             case 'logout': {
-                // if user is logged out
-                if (!req.context.user) {
-                    res.writeHead(307, {"Location": "/"})
-                    return res.end()
-                }
-                // log user out and redirect
-                req.context.destination = '/'
-                return this.return_html(req, res, 'logout', null, 500, 401)
-            }
-            case 'register': {
-                // if user already logged in
                 if (req.context.user) {
-                    res.writeHead(307, {"Location": "/"})
+                    // log user out and redirect
+                    res.writeHead(307, {
+                        "Location": "/",
+                        "Set-Cookie": this.del_cookie('auth')
+                    })
                     return res.end()
                 }
-                // try to create account
-                this.data.addUser(req.headers.authorization, (err) => {
-                    // if invalid credentials
-                    if (err) {
-                        // if cancelled return to home
-                        if (req.headers.cookie > 0 && err.message == "Quit early") {
-                            res.writeHead(307, {Location: "/", 'Set-Cookie': 0})
-                            return res.end()
-                        }
-                        // display the error if there is one
-                        if (req.headers.cookie >= 1 && req.headers.cookie%2 == 1) {
-                            req.context.err = err
-                            req.context.location = "/register"
-                            req.context.return = "/"
-                            return this.return_html(req, res, 'error', null, 500, 200, {'Set-Cookie': parseInt(req.headers.cookie)+1})
-                        }
-                        res.writeHead(401, {"WWW-Authenticate": `Basic`, 'Set-Cookie': parseInt(req.headers.cookie)+1})
-                        return res.end()
-                    }
-                    // return to home
-                    res.writeHead(307, {Location: "/", 'Set-Cookie': 0})
-                    return res.end()
-                })
-                break
+                // if user is logged out
+                res.writeHead(307, {"Location": "/"})
+                return res.end()
             }
             default: {
                 // Templated html

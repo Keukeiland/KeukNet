@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+const cookie = require('cookie')
+
 // enable use of dotenv
 require('dotenv').config()
 
@@ -13,6 +15,7 @@ let texts = require('./config/texts')
 
 // set up global context
 const global = require('./global')
+global.cookie = cookie
 global.config = config
 global.wg_config = wg_config
 global.texts = texts
@@ -39,10 +42,9 @@ const requestListener = function (req, res) {
         req.ip = process.env.IP
     }
 
-    // if no authorization headers set it to false, to prevent errors
-    req.headers.authorization ??= false
-    // make sure cookie is defined
-    if (isNaN(req.headers.cookie)) req.headers.cookie = 0
+    req.cookies = cookie.parse(req.headers.cookie || '')
+    // get authorization info
+    req.headers.authorization ??= req.cookies.auth
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
     req.headers.host ??= req.headers[':authority']
 
