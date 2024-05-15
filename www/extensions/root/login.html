@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h2>Register / Log in</h2>
+    <form action="/login" method="post" enctype="application/x-www-form-urlencoded">
+        <table>
+            <tr>
+                <td><label for="username">Name:</label></td>
+                <td><input type="text" name="username" id="username"></td>
+            </tr>
+            <tr>
+                <td><label for="password">Password:</label></td>
+                <td><input type="password" name="password" id="password"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" value="register" name="register">
+                    <input type="submit" value="log in" name="login">
+                </td>
+            </tr>
+        </table>
+        <span id="error" style="color: red;">{{auth_err}}</span>
+    </form>
+{% endblock %}

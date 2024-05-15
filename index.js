@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-// import http servers
-const http2 = require('http2')
-const http = require('http')
+const cookie = require('cookie')
 
 // enable use of dotenv
 require('dotenv').config()
@@ -17,6 +15,7 @@ let texts = require('./config/texts')
 
 // set up global context
 const global = require('./global')
+global.cookie = cookie
 global.config = config
 global.wg_config = wg_config
 global.texts = texts
@@ -30,9 +29,7 @@ log.init(config.logging)
 fetch.init(`${__dirname}/www/static/`)
 log.status("Initializing database")
 data.init(`${__dirname}/data/`, config.salt, function (err) {
-    if (err) {
-        log.err(err)
-    }
+    if (err) log.err(err)
     log.status("Database initialized")
     // set up request handler
     handle.init(Object.freeze(global))
@@ -45,21 +42,26 @@ const requestListener = function (req, res) {
         req.ip = process.env.IP
     }
 
-    // if no authorization headers set it to false, to prevent errors
-    req.headers.authorization ??= false
+    req.cookies = cookie.parse(req.headers.cookie || '')
+    // get authorization info
+    req.headers.authorization ??= req.cookies.auth
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
     req.headers.host ??= req.headers[':authority']
-    // set user agent to "NULL", to prevent errors
-    req.headers['user-agent'] ??= "NULL"
-    // make sure cookie is defined
-    if (isNaN(req.headers.cookie)) req.headers.cookie = 0
-    // get requesting IP
-    req.ip ??= req.headers['x-real-ip'] || req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
 
-    // if request is not for any domain served here, act like server isn't here
-    if (req.headers.host != config.domain) {
-        log.con_err(req)
-        return
+    // If standalone
+    if (!config.nginx) {
+        // get requesting IP
+        req.ip ??= req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
+
+        // if request is not for any domain served here, act like server isn't here
+        if (req.headers.host != config.domain) {
+            log.con_err(req)
+            return
+        }
+    // If behind NGINX
+    } else {
+        // get requesting IP
+        req.ip = req.headers['x-real-ip'] || '0.0.0.0'
     }
 
     // separate url arguments from the url itself
@@ -109,39 +111,52 @@ const requestListener = function (req, res) {
     }
 }
 
-
-// Handle insecure HTTP requests
-const insecureRequestListener = function (req, res) {
-    // redirect request to HTTPS
+// Redirect requests to HTTPS
+const httpsRedirect = function (req, res) {
     res.writeHead(307, {"Location": `https://${req.headers.host}${req.url}`})
     res.end()
 }
 
-if (!config.nginx) {
-    // fetch https encryption keys
-    log.status("Fetching encryption keys")
-    fetch.key(config.private_key_path, function(private_key, err) {
-        if (err) log.err("Failed fetching private key")
-        fetch.key(config.server_cert_path, function(server_cert, err) {
-            if (err) log.err("Failed fetching server certificate")
-            fetch.key(config.ca_cert_path, function(ca_cert, err) {
-                if (err) log.err("Failed fetching CA certificate")
-                log.status("Encryption keys fetched")
-                http2.createSecureServer({
-                    key: private_key,
-                    cert: server_cert,
-                    ca: ca_cert,
-                    allowHTTP1: true,
-                    }, requestListener)
-                    .listen(config.https_port, config.host, () => {
-                        console.log(`\x1b[1mHTTP/2 & HTTPS server running on https://${config.domain}:${config.https_port}, interface '${config.host}'\n\x1b[0m`)
-                    })
+
+function startServer(http, https) {
+    if (https) {
+        log.status("Fetching encryption keys")
+        // Private key
+        fetch.key(config.private_key_path, function(key, err) {
+            if (err) log.err("Failed fetching private key")
+            // Certificate
+            fetch.key(config.server_cert_path, function(cert, err) {
+                if (err) log.err("Failed fetching server certificate")
+                // Certificate chain
+                fetch.key(config.ca_cert_path, function(ca, err) {
+                    if (err) log.err("Failed fetching CA certificate")
+                    log.status("Encryption keys fetched")
+                    // Start server
+                    require('http2').createSecureServer({
+                        key,
+                        cert,
+                        ca,
+                        allowHTTP1: true,
+                    }, requestListener).listen(
+                        config.https_port,
+                        config.host,
+                        () => log.serverStart("https", config.domain, config.host, config.https_port)
+                    )
+                })
             })
         })
-    })
+    }
+    if (http) {
+        // Start server
+        require('http').createServer(
+            https ? httpsRedirect : requestListener
+        ).listen(
+            config.http_port,
+            config.host,
+            () => log.serverStart("http", config.domain, config.host, config.http_port)
+        )
+    }
 }
-// Start HTTP server
-http.createServer(config.nginx ? requestListener : insecureRequestListener)
-    .listen(config.http_port, config.host, () => {
-        console.log(`\x1b[1mHTTP/1.1 server running on http://${config.domain}:${config.http_port}, interface '${config.host}'\n\x1b[0m`)
-    })
+
+startServer(true, !config.nginx)
+    

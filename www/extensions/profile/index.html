@@ -6,7 +6,7 @@
 
 {% block body %}
     <section class="user">
-        <h2>Status: {{ "connected" if connected else "disconnected" }}</h2>
+        <h2>Status: {{ "connected" if connected_ip else "disconnected" }}</h2>
         <a href="keuknet://load&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Connect</a>
         <a href="keuknet://unload&" class="button" target="_blank" onclick="javascript:(async function click () {await new Promise(r => setTimeout(r, 10000));window.location.reload()})()">Disconnect</a>
     </section>
@@ -24,10 +24,13 @@
                     {% else %}
                         Device {{loop.index}}
                     {% endif %}
+                    {% if p.ip == connected_ip %}
+                        (Current device)
+                    {% endif %}
                 </p>
                 <p>{{p.uuid}}</p>
                 <p>IP: {{p.ip}}</p>
-                <a href="/profile/install?uuid={{p.uuid}}" class="{{'disabled' if p.installed}}button">Install</a>
+                <a href="/profile/install?uuid={{p.uuid}}" class="button {{'disabled' if p.installed}}">Install</a>
                 <a href="/profile/rename?uuid={{p.uuid}}" class="button">Rename</a>
                 <a href="/profile/delete?uuid={{p.uuid}}" class="button">Delete</a>
                 <hr>

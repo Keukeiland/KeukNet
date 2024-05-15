@@ -124,4 +124,29 @@ module.exports = class Extension {
         res.writeHead(200, args)
         return res.end(data)
     }
+
+    set_cookie(key, value, secure=false) {
+        if (secure)
+            return this.cookie.serialize(
+                key,
+                value, {
+                    secure: true,
+                    httpOnly: true
+                }
+            )
+        else
+            return this.cookie.serialize(
+                key,
+                value
+            )
+    }
+
+    del_cookie(key) {
+        return this.cookie.serialize(
+            key,
+            '', {
+                expires: new Date(1)
+            }
+        )
+    }
 }

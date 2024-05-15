@@ -11,6 +11,7 @@ var data, wg_config
 exports.init = function (global) {
     ({data,wg_config,texts,nj,config} = global)
     nj.addGlobal('dicebear_host', config.dicebear_host)
+    nj.addGlobal('client_location', config.client_location)
 
     root = new ((require(`./extensions/root/index.js`))(global.Extension))(global, `${__dirname}/extensions/root/`, `${__dirname}/../data/root/`)
 
@@ -36,10 +37,9 @@ exports.main = function (req, res) {
     req.context = {...req.args}
     req.context.extensions = extensions
     req.context.location = location
-    req.context.connected = req.ip.startsWith(wg_config.ip_scope)
     
     // Authenticate using user&pass, else using ip
-    data.authenticate(req.headers.authorization, req.ip, wg_config.ip_scope, function (user, err) {
+    data.authenticate(req.headers.authorization, req.ip, wg_config.subnet, function (user, err) {
         req.context.user = user
         if (err) req.context.auth_err = err
         if (user && user.is_admin) req.context.extensions = {...req.context.extensions, ...admin_extensions}

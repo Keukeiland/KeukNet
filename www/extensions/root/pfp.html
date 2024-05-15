@@ -1,0 +1,16 @@
+{% extends "extension.html" %}
+
+{% block body %}
+    <div id="avatar" style="width: 100px;height: 100px;">
+    </div>
+    <div>
+        <form onkeydown="if(event.keyCode==13){return false}" onsubmit="return false;">
+            <table id="inputs">
+            </table>
+            <button onclick="save()">save</button>
+        </form>
+    </div>
+    <span style="display: none;" id="old_code">{{user.pfp_code}}</span>
+    <script src="/pfp.js"></script>
+
+{% endblock %}

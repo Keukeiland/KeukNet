@@ -3,8 +3,8 @@
 {% block body %}
     <section class="user">
         <h1>Hello {{user.name}}!</h1>
-        <img src="https://{{dicebear_host}}/7.x/lorelei/svg?{{user.pfp_code}}" width="125px" height="125px">
-        <p>^ Your pfp (can be changed later, still being worked on)</p>
+        <img src="{{dicebear_host}}?{{user.pfp_code}}" width="125px" height="125px"><br>
+        <a href="/_/pfp" class="button">Edit</a>
         <p>You registered at {{user.regdate}}</p>
     </section>
 
