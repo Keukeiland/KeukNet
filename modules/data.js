@@ -55,7 +55,7 @@ exports.addUser = function (name, password, callback) {
             if (err) return callback(err)
             if (exists) return callback(new Error("Username already taken"))
             // add user to db
-            db.run("INSERT INTO user(name,password) VALUES($name,$password)", [name, password], function (err) {
+            db.run("INSERT INTO user(name,password,pfp_code) VALUES($name,$password,$pfp_code)", [name, password, 'seed='+name], function (err) {
                 return callback(err)
             })
         })

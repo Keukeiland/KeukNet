@@ -13,7 +13,7 @@ exports.salt = "Password salt here!"
 /** Location of the temporary directory. Defaults to your system's default temp dir */
 exports.tmp_dir = tmpdir()
 /** The location where the dicebear instance is hosted */
-exports.dicebear_host = "api.dicebear.com"
+exports.dicebear_host = "https://api.dicebear.com/7.x/lorelei/svg"
 /** The location where the client files are hosted */
 exports.client_location = "https://github.com/keukeiland/keuknet-client/releases/latest/download/"
 /** Whether connections are logged */

@@ -11,6 +11,9 @@ module.exports = (Extension) => {return class extends Extension {
 
 
     requires_login(path) {
+        if (path.at(0) == '_') {
+            return true
+        }
         return false
     }
 
@@ -80,6 +83,28 @@ module.exports = (Extension) => {return class extends Extension {
                 // if user is logged out
                 res.writeHead(307, {"Location": "/"})
                 return res.end()
+            }
+            case '_': {
+                var item = req.path.shift()
+                switch (item) {
+                    case 'pfp': {
+                        var args = req.url.split('?').at(1)
+                        if (args) {
+                            try {
+                                args = decodeURIComponent(args)
+                            } catch {}
+                            this.db.update('user', ['pfp_code=$args'], 'id=$id', [args, req.context.user.id], (err) => {
+                                res.writeHead(307, {"Location": "/"})
+                                res.end()
+                            })
+                            return
+                        }
+                        else {
+                            return this.return_html(req, res, 'pfp', null)
+                        }
+                    }
+                }
+                break
             }
             default: {
                 // Templated html
