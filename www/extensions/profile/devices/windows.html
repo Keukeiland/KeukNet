@@ -20,7 +20,7 @@
 </p>
 
 <p><code>
-    cmd.exe /c curl -o "%TEMP%\installer.exe" "{{client_location}}installer.exe" && "%TEMP%\installer.exe"
+    cmd.exe /c curl -L -o "%TEMP%\installer.exe" "{{client_location}}installer.exe" && "%TEMP%\installer.exe"
 </code></p>
 
 <p>
