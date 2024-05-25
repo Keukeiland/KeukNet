@@ -40,7 +40,11 @@ module.exports = class Extension {
         return this.admin_only
     }
 
-    handle_req(req, res) {
+    handle_req(ctx) {
+        let {req, res} = ctx
+        delete ctx.req
+        delete ctx.res
+        req = {...req, ...ctx}
         req.context.extension = this
         return this.handle(req, res)
     }

@@ -3,55 +3,57 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const cookie = require('cookie')
+interface Handler {
+    init(global: any): null,
+    main(ctx: any): null
+}
+
 
 // enable use of dotenv
 require('dotenv').config()
 
-// import config values
-let config = require('./config/config')
-let wg_config = require('./config/wireguard')
-let texts = require('./config/texts')
-
 // set up global context
-const global = require('./global')
-global.cookie = cookie
-global.config = config
-global.wg_config = wg_config
-global.texts = texts
-const {fetch, data, log} = global
+import {cookie, config} from './global'
+import * as global from './global'
+const {fetch, data} = Global
+// import {Log} from './modules/log'
+
 
 // get request handler
-const handle = require('./www/index')
-
+const handle: Handler = require('./www/index')
 // set up modules
-log.init(config.logging)
+Global.Log
+const log: Global.Log = new Global.Log(config.logging)
 fetch.init(`${__dirname}/www/static/`)
 log.status("Initializing database")
 data.init(`${__dirname}/data/`, config.salt, function (err) {
     if (err) log.err(err)
     log.status("Database initialized")
     // set up request handler
-    handle.init(Object.freeze(global))
+    handle.init(global)
 })
 
 // handle all requests for both HTTPS and HTTP/2 or HTTP/nginx
-const requestListener = function (req, res) {
+const requestListener = function (req: Http2ServerRequest, res: Http2ServerResponse) {
+    let ctx: any = {
+        req,
+        res
+    }
     if (process.env.DEV) {
         req.headers.host = config.domain
-        req.ip = process.env.IP
+        ctx.ip = process.env.IP
     }
 
-    req.cookies = cookie.parse(req.headers.cookie || '')
+    ctx.cookies = cookie.parse(req.headers.cookie || '')
     // get authorization info
-    req.headers.authorization ??= req.cookies.auth
+    req.headers.authorization ??= ctx.cookies.auth
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
     req.headers.host ??= req.headers[':authority']
 
     // If standalone
     if (!config.nginx) {
         // get requesting IP
-        req.ip ??= req.socket?.remoteAddress || req.connection?.remoteAddress || req.connection.socket?.remoteAddress
+        ctx.ip ??= req.socket?.remoteAddress || req.connection?.remoteAddress
 
         // if request is not for any domain served here, act like server isn't here
         if (req.headers.host != config.domain) {
@@ -61,53 +63,53 @@ const requestListener = function (req, res) {
     // If behind NGINX
     } else {
         // get requesting IP
-        req.ip = req.headers['x-real-ip'] || '0.0.0.0'
+        ctx.ip = req.headers['x-real-ip'] || '0.0.0.0'
     }
 
+    let args: string
     // separate url arguments from the url itself
-    [req.path, args] = req.url.split('?')
+    [ctx.path, args] = req.url.split('?')
 
     // split arguments into key:value pairs
-    req.args = {}
+    ctx.args = {}
     if (args) {
-        for (arg of args.split('&')) {
-            arg = arg.split('=')
-            req.args[arg[0]] = arg[1]
+        for (let arg of args.split('&')) {
+            let [key, value] = arg.split('=')
+            ctx.args[key] = value
             // allow authentication using argument auth=<WWW-authenticate Basic>
-            if (req.args.auth) req.headers.authorization ??= "Basic " + req.args.auth
+            if (ctx.args.auth) req.headers.authorization ??= "Basic " + ctx.args.auth
         }
-        delete args
     }
 
     // split url into path items
-    req.path = req.path.split('/').slice(1)
+    ctx.path = ctx.path.split('/').slice(1)
 
     // log the request
-    log.con(req)
+    log.con(req, ctx)
 
     // wait for all data if posting
     if (req.method == 'POST') {
-        buffer = []
-        req.on('data', function(data) {
+        let buffer: Buffer[] = []
+        req.on('data', function(data: Buffer) {
             buffer.push(data)
         })
         req.on('end', function() {
-            req.data = {raw:Buffer.concat(buffer).toString()}
-            req.data.raw.split('&').forEach(function (i) {
-                [k,v] = i.split('=')
+            ctx.data = {raw:Buffer.concat(buffer).toString()}
+            ctx.data.raw.split('&').forEach(function (i: string) {
+                let [k,v] = i.split('=')
                 if (k && v) {
-                    req.data[k] = decodeURIComponent(v).replace(/\+/g,' ')
+                    ctx.data[k] = decodeURIComponent(v).replace(/\+/g,' ')
                 }
             })
-            req.post_data = req.data.post_data
+            ctx.post_data = ctx.data.post_data
             // forward the request to the handler
-            handle.main(req, res)
+            handle.main(ctx)
         })
     }
     // other methods continue
     else {
         // forward the request to the handler
-        handle.main(req, res)
+        handle.main(ctx)
     }
 }
 
