@@ -3,10 +3,19 @@ module.exports = (Extension) => {return class extends Extension {
     title = 'Home'
     tables = true
     dependencies = ['content','nj','fetch','data','texts','cookie']
+    favicons = []
+    favicons_path
 
-    constructor (global, path, config_path) {
+    constructor (global, path, data_path) {
         super(global, path)
-        this.favicons = global.favicons
+
+        this.favicons_path = data_path+'favicons/'
+        let fs = require('fs')
+        try {
+            this.favicons.push(...fs.readdirSync(this.favicons_path))
+        } catch {
+            global.log.err(new Error(`No favicons found in '${this.favicons_path}'`))
+        }
     }
 
 
@@ -113,11 +122,11 @@ module.exports = (Extension) => {return class extends Extension {
                 }
                 // Favicon
                 else if (this.favicons.includes(location)) {
-                    return this.return_file(res, `favicons${req.url}`)
+                    return this.return_file(res, this.favicons_path+location)
                 }
                 // File
                 else {
-                    return this.return_file(res, req.url)
+                    return this.return_file(res, location)
                 }
             }
         }
