@@ -94,9 +94,8 @@ module.exports = (Extension) => {return class extends Extension {
                 })
                 }
                 else {
-                    this.nj.render('snippets/post.html', {item:"new name",action:req.url,destination:"/profile"}, (err, data) => {
-                        return this.return_data(res, data, err, this.content['html'], 500)
-                    })
+                    req.context = {item:"new name",action:req.url,destination:"/profile"}
+                    this.return_html(req, res, 'edit')
                 }
                 break
             }

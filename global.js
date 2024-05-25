@@ -1,5 +1,5 @@
 /* import external modules */
-const nj = require('nunjucks').configure(['www/templates','www/pages','www/extensions'])
+const nj = require('nunjucks').configure(['www/templates','www/extensions'])
 
 /* import custom modules */
 const microfetch = require('./modules/microfetch')
