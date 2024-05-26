@@ -19,8 +19,11 @@ class Fetch {
         // get file-type and if it's binary or text
         var filetype = file.slice(file.lastIndexOf('.')+1)
         var encoding = this.bin_exts.includes(filetype) ? undefined : 'utf8'
+
+        let location = file.at(0) == '/' ? file : this.root+file
+
         // read the file
-        readFile(this.root+file, encoding)
+        readFile(location, encoding)
             // cache and return the data
             .then(data => {
                 this.cache[file] = data
