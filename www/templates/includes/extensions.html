@@ -1,10 +1,6 @@
 <section class="extensions">
     {% for _,ext in extensions %}
-        <a href="/{{ext.name}}" class="{{'selected' if ext.name == location}}">{{ext.title}}</a>
+        <a href="/{{ext.name}}" class="{{'selected' if ext.name == location}} item">{{ext.title}}</a>
     {% endfor %}
 
-    <a href="/" class="{{'selected' if location == ''}} right">
-        <span>{{user.name}}</span>
-        <img src="{{dicebear_host}}?radius=50&{{user.pfp_code}}" width="25px" height="25px">
-    </a>
 </section>
