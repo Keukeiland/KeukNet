@@ -2,20 +2,17 @@
     "compilerOptions": {
         "outDir": "./build",
         "allowJs": true,
-        //   "target": "es5"
+        "target": "es2022",
         "moduleResolution": "Node16",
         "module": "Node16",
         "noImplicitThis": true,
-        // "types": [
-        //     "./global.d.ts",
-        //     "node",
-        //     "nunjucks",
-        //     "cookie"
-        // ]
-        // "declaration": true,
-        // "declarationDir": "./types"
-        "typeRoots": ["./node_modules/@types", "types"]
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "strictNullChecks": true,
+        "typeRoots": ["./node_modules/@types", "./types/**/*"],
     },
-    // "include": ["./**/*"],
-    "exclude": ["./build"]
+    "ts-node": {
+        "files": true,
+    },
+    "exclude": ["./build"],
 }
