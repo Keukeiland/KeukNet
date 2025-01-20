@@ -1,17 +1,20 @@
-export class DB {
+import { Database } from "sqlite3"
+
+export class DB implements Module {
     special_tables = [
         'user',
         'db_table_versions'
     ]
-    db: any
+    db: Database
     prefix: string
 
-    constructor(db: any, prefix: string) {
-        this.db = db
-        this.prefix = '_'+prefix+'_'
+    init: Module['init'] = (context: InitContext) => {
+        this.db = context.database
+        this.prefix = '_'+context.name+'_'
+        return [true]
     }
 
-    __formatTableName = (name: string) => {
+    formatTableName = (name: string) => {
         if (
             this.special_tables.includes(name)
             || name.startsWith('_')
@@ -22,7 +25,7 @@ export class DB {
 
     // Table modifications
     createTable = (table: string, columns: string[]) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         let columns_str = columns.join(', ')
         this.db.run(`CREATE TABLE IF NOT EXISTS ${table} (${columns_str})`, [], (err?: Error) => {
             if (err) throw new Error(`Failed creating new table ${table}. ${err}`)
@@ -30,7 +33,7 @@ export class DB {
     }
 
     dropTable = (table: string) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         this.db.run(`DROP TABLE ${table}`, [], (err?: Error) => {
             if (err) throw new Error(`Failed dropping table ${table}. ${err}`)
         })
@@ -38,23 +41,23 @@ export class DB {
 
     // Column modifications
     addColumn = (table: string, column: string, callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         this.db.run(`ALTER TABLE ${table} ADD COLUMN ${column}`, [], callback)
     }
 
     dropColumn = (table: string, column: string, callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         this.db.run(`ALTER TABLE ${table} DROP COLUMN ${column}`, [], callback)
     }
 
     renameColumn = (table: string, old_column: string, new_column: string, callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         this.db.run(`ALTER TABLE ${table} RENAME COLUMN ${old_column} to ${new_column}`, [], callback)
     }
     
     // Standard functions
-    select = (table: string, columns: string[], where: string, order_by: string, params: any, callback: (err: null|Error, data: null|any) => void) => {
-        table = this.__formatTableName(table)
+    select = (table: string, columns: string[], where: string|null, order_by: string|null, params: any, callback: (err: null|Error, data: null|any) => void) => {
+        table = this.formatTableName(table)
         let columns_str = columns.join(', ')
         // Construct query
         let query = `SELECT ${columns_str} FROM ${table}`
@@ -65,7 +68,7 @@ export class DB {
     }
 
     insert = (table: string, columns: string[], values: any[], callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         let columns_str = columns.join(', ')
         let values_str = `$${columns.join(', $')}`
         // Run query
@@ -73,14 +76,14 @@ export class DB {
     }
 
     update = (table: string, columns: string[], where: string, values: any, callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         let columns_str = columns.join(', ')
         // Run query
         this.db.run(`UPDATE ${table} SET ${columns_str} WHERE ${where}`, values, callback)
     }
 
     delete = (table: string, where: string, values: any, callback: (err?: Error) => void) => {
-        table = this.__formatTableName(table)
+        table = this.formatTableName(table)
         // Run query
         this.db.run(`DELETE FROM ${table} WHERE ${where}`, values, callback)
     }

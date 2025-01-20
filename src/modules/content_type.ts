@@ -1,6 +1,5 @@
 // Source: https://stackoverflow.com/a/51398471/15181929
-
-export default (class {
+export default (class implements Module {
     static readonly HTML = {"Content-Type": "text/html"}
     static readonly ASCII = {"Content-Type": "text/plain charset us-ascii"}
     static readonly TXT = {"Content-Type": "text/plain charset utf-8"}
@@ -22,4 +21,9 @@ export default (class {
     // Force singleton
     private constructor(private readonly key: string, public readonly value: any) {
     }
+
+    init: Module['init'] = (_context) => {
+        return [true]
+    }
+
 }) as ContentType

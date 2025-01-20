@@ -1,3 +1,3 @@
 declare interface Handle {
-    main(ctx: Context): void,
+    main(ctx: PartialContext): void,
 }

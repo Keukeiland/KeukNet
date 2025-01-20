@@ -1,16 +1,20 @@
 import sqlite3 from 'sqlite3'
+import { promises as fs } from 'fs'
+import http, { IncomingMessage, RequestListener, ServerResponse } from 'http'
+import http2, { Http2ServerRequest } from 'http2'
 
 // enable use of dotenv
-require('dotenv').config()
+import dotenv from 'dotenv'
+dotenv.config()
 
 // set up global context
-import {cookie, config, Log} from './modules'
-import * as modules from './modules'
+import {cookie, config, Log} from './modules.ts'
+import * as modules from './modules.ts'
 
-const db = new (sqlite3.verbose()).Database(`${__dirname}/../data/db.sqlite`)
+const db = new (sqlite3.verbose()).Database(`${import.meta.dirname}/../data/db.sqlite`)
 
 // get request handler
-import Handle from './handle'
+import Handle from './handle.ts'
 let handle = new Handle(modules, db)
 // set up modules
 const log: Log = new Log(config.logging)
@@ -19,7 +23,7 @@ const log: Log = new Log(config.logging)
 const requestListener = async function (req: Http2ServerRequest, res: Http2ServerResponse) {
     let ip: Context['ip']
     let cookies: Context['cookies']
-    let args: Context['args']
+    let args: Context['args'] = new Map<string, string>()
     let path: Context['path']
     let data: Context['data']
 
@@ -52,17 +56,15 @@ const requestListener = async function (req: Http2ServerRequest, res: Http2Serve
     }
 
     {
-        let raw_path: string
-        let raw_args: string
         // separate url arguments from the url itself
-        [raw_path, raw_args] = req.url.split('?')
+        let [raw_path = req.url, raw_args = ''] = req.url.split('?', 2)
     
         // split arguments into key:value pairs
-        args = new Map<string, string>()
-        if (raw_args) {
+        if (raw_args != '') {
             for (let arg of raw_args.split('&')) {
-                let [key, value] = arg.split('=')
-                args.set(key, value)
+                let [key, value] = arg.split('=', 2)
+                if (!(key === undefined || value === undefined))
+                    args.set(key, value)
             }
         }
 
@@ -78,7 +80,7 @@ const requestListener = async function (req: Http2ServerRequest, res: Http2Serve
                 buffer.push(data)
             })
             req.on('end', function() {
-                let bytes = Buffer.concat(buffer)
+                let bytes = Buffer.concat(buffer as readonly Uint8Array[])
                 data = {
                     bytes,
                     raw: bytes.toString(),
@@ -96,14 +98,14 @@ const requestListener = async function (req: Http2ServerRequest, res: Http2Serve
         })
     }
     
-    let ctx: Context = {
+    let ctx: PartialContext = {
         req,
         res,
         path,
         args,
         cookies,
         ip,
-        data
+        data,
     }
     // log the request
     log.con(req, ctx)
@@ -111,17 +113,31 @@ const requestListener = async function (req: Http2ServerRequest, res: Http2Serve
     handle.main(ctx)
 }
 
+function requestListenerCompat(req: IncomingMessage, res: ServerResponse) {
+    const new_req = {
+        authority: req.headers.host ?? '',
+        scheme: new URL(req.url ?? '').protocol,
+        ...req,
+    } as unknown as Http2ServerRequest
+
+    const new_res = {
+        ...res,
+    } as unknown as Http2ServerResponse
+
+    return requestListener(new_req, new_res)
+}
+
 // Redirect requests to HTTPS
-const httpsRedirect = function (req: Http2ServerRequest, res: Http2ServerResponse) {
+function httpsRedirect(req: IncomingMessage, res: ServerResponse) {
     res.writeHead(307, {"Location": `https://${req.headers.host}${req.url}`})
     res.end()
 }
 
 
-function startServer(http: boolean, https: boolean) {
-    if (https) {
+function startServer(http_enabled: boolean, https_enabled: boolean) {
+    if (https_enabled) {
         let key = function (location: string, callback: (data?: any) => void) {
-            require('fs').promises.readFile(location, "utf8")
+            fs.readFile(location, "utf8")
             .then(callback)
             .catch((err: Error) => {
                 log.err(`Failed fetching key at: '${location}'`)
@@ -138,8 +154,7 @@ function startServer(http: boolean, https: boolean) {
                 key(config.ca_cert_path, function(certificate_authority) {
                     log.status("Encryption keys fetched")
                     // Start server
-                    require('http2')
-                        .createSecureServer({
+                    http2.createSecureServer({
                             key: private_key,
                             cert: certificate,
                             ca: certificate_authority,
@@ -154,10 +169,10 @@ function startServer(http: boolean, https: boolean) {
             })
         })
     }
-    if (http) {
+    if (http_enabled) {
         // Start server
-        require('http').createServer(
-            https ? httpsRedirect : requestListener
+        http.createServer(
+            https_enabled ? httpsRedirect : requestListenerCompat
         ).listen(
             config.http_port,
             config.host,

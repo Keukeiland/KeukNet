@@ -6,7 +6,7 @@ declare interface Extension {
     name: string
     title: string
 
-    init(context: InitContext): ResultStatus
+    init(context: InitContext): void | Promise<void>
 
     requires_login(path: string[]): boolean
 
@@ -36,6 +36,10 @@ declare interface RootExtension extends Extension {
     addUser(name: User['name'], password: User['password'], callback: (err?: Error) => void): void
 }
 
-declare interface DependencyMap extends Map<string, any> {
-    massGet(...items: string[]): any[]
+declare interface DependencyMap<K=string, V=any> {
+    forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void
+    has(key: K): boolean
+    set(key: string, value: any): void
+    get(key: string): any
+    massGet<T extends string[]>(...items: T): { [K in keyof T]: any }
 }

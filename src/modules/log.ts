@@ -33,7 +33,7 @@ export default class implements Log {
         return url.split('?')[0]
     }
 
-    con(req: Http2ServerRequest, ctx: Context) {
+    con(req: Http2ServerRequest, ctx: Context | PartialContext) {
         if (this.we_logging) {
             let ip = this.mask_ip(ctx.ip || '')
             let url = this.mask_url(req.url)

@@ -1,15 +1,18 @@
 import { readFile } from "fs/promises"
 import * as path from "path"
 
-export default class implements Fetch {
+export default class implements Module, Fetch {
     /** File extensions of binary filetypes */
     private readonly BIN_EXTS: Set<string> = new Set(['png','jpg','mp3'])
     /** Caches processed files */
     private cache: Map<string, FileData> = new Map()
     private root: string
 
-    constructor (raw_path: string) {
-        this.root = path.join(raw_path, "/static/")
+    
+
+    init: Module['init'] = (context) => {
+        this.root = path.join(context.path, "/static/")
+        return [true]
     }
 
     file: Fetch['file'] = (file_path, callback) => {

@@ -10,7 +10,7 @@ declare type HttpHeader = {
 
 declare type BasicAuth = `Basic ${string}`
 
-declare type FileData = Buffer | string
+declare type FileData = string | null
 
 declare type Context = {
     req: Http2ServerRequest
@@ -21,7 +21,23 @@ declare type Context = {
     path: string[]
     args: Map<string, string>
     data?: {bytes: Buffer, raw: string, form: any}
-    context?: any
+    context: {
+        user?: User
+        extensions: Map<string, Extension>
+        location: string
+        [any: string]: any
+    }
+}
+
+declare type PartialContext = {
+    req: Http2ServerRequest
+    res: Http2ServerResponse
+    
+    ip: string
+    cookies: Record<string, string>
+    path: string[]
+    args: Map<string, string>
+    data?: {bytes: Buffer, raw: string, form: any}
 }
 
 declare type User = {
@@ -38,6 +54,13 @@ declare type InitContext = {
     database: Database,
     path: string,
     data_path: string,
+    name: string,
 }
 
 declare type ResultStatus = [Okay: false, Error: Error] | [Okay: true]
+
+declare type VariableSizeArray<S, T> = { [K in keyof S]: T }
+
+declare interface Module {
+    init(context: InitContext): ResultStatus
+}

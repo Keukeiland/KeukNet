@@ -32,9 +32,7 @@ export default class extends ExtensionBase implements RootExtension {
             (new modules.Log as Log).err(`No favicons found in '${this.favicons_path}'`)
         }
 
-        let status = ExtensionBase.init(this, context)
-
-        return status
+        return ExtensionBase.init(this, context)
     }
 
     override requires_login = (path: string[]) => {
@@ -46,7 +44,7 @@ export default class extends ExtensionBase implements RootExtension {
 
     override handle = (ctx: Context, deps: DependencyMap) => {
         var location = ctx.path.shift()
-        let [db, data] = deps.massGet('db', 'data')
+        let [db]: [DB] = deps.massGet('DB')
 
         switch (location) {
             case '':
@@ -119,25 +117,27 @@ export default class extends ExtensionBase implements RootExtension {
                 return
             }
             case '_': {
-                var item = ctx.path.shift()
-                switch (item) {
-                    case 'pfp': {
-                        var args = ctx.req.url.split('?').at(1)
-                        if (args) {
-                            try {
-                                args = decodeURIComponent(args)
-                            } catch {}
-                            db.update('user', ['pfp_code=$args'], 'id=$id', [args, ctx.context.user.id], (err?: Error) => {
-                                if (err)
-                                    ctx.res.writeHead(500)
-                                else
-                                    ctx.res.writeHead(307, {"Location": "/"})
-                                ctx.res.end()
-                            })
-                            return
+                if (ctx.context.user) {
+                    var item = ctx.path.shift()
+                    switch (item) {
+                        case 'pfp': {
+                            var args = ctx.req.url.split('?').at(1)
+                            if (args) {
+                                try {
+                                    args = decodeURIComponent(args)
+                                } catch {}
+                                db.update('user', ['pfp_code=$args'], 'id=$id', [args, ctx.context.user.id], (err: Error|null) => {
+                                    if (err)
+                                        ctx.res.writeHead(500)
+                                    else
+                                        ctx.res.writeHead(307, {"Location": "/"})
+                                    ctx.res.end()
+                                })
+                                return
+                            }
+                            else
+                                return this.return_html(ctx, 'pfp')
                         }
-                        else
-                            return this.return_html(ctx, 'pfp')
                     }
                 }
                 break

@@ -28,7 +28,7 @@ export default class extends ExtensionBase {
     }
 
     handle(ctx, deps) {
-        let [db] = deps.massGet('db')
+        let [db] = deps.massGet('DB')
         var location = ctx.path.shift()
 
         switch (location) {
@@ -114,7 +114,7 @@ export default class extends ExtensionBase {
     }
 
     owns = (user, uuid, callback) => {
-        let db = this.initialized_deps.get('db')
+        let db = this.initialized_deps.get('DB')
 
         if (!uuid) return callback(undefined)
         db.select('device', ['1'], 'user_id=$id AND uuid=$uuid', null, [user.id, uuid], (err, data) => {

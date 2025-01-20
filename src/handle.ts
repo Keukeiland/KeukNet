@@ -1,5 +1,6 @@
-import { load } from "./extman"
-import Log from "./modules/log"
+/** @ts-ignore 2305 */
+import { load } from "./extman.cjs"
+import Log from "./modules/log.ts"
 
 let log = new Log(true)
 
@@ -9,8 +10,8 @@ export default class implements Handle {
     ]
     root: RootExtension
     wg_config: any
-    extensions: Record<string, Extension>
-    admin_extensions: Record<string, Extension>
+    extensions = new Map<string, Extension>()
+    admin_extensions = new Map<string, Extension>()
 
     constructor(modules: any, database: any) {
         let config = modules.config
@@ -21,32 +22,34 @@ export default class implements Handle {
     
         this.root = load(modules, database, 'root') as RootExtension
     
-        this.extensions = {}
         for (const path of this.extensions_list) {
-            console.log(path)
             try {
-                this.extensions[path] = load(modules, database, path) as Extension
-            } catch (err) {
-                log.err(`Unable to load extension '${path}':\n\t${err}`)
+                this.extensions.set(path, load(modules, database, path) as Extension)
+            } catch (err: any) {
+                log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
             }
         }
         
-        this.admin_extensions = {}
-        for (const ext of Object.keys(this.extensions)) {
-            if (this.extensions[ext].admin_only) {
-                this.admin_extensions[ext] = this.extensions[ext]
-                delete this.extensions[ext]
+        this.extensions.forEach((extension, name, m) => {
+            if (extension.admin_only) {
+                this.admin_extensions.set(name, extension)
+                this.extensions.delete(name)
             }
-        }
+        })
     }
     
-    main: Handle['main'] = (ctx: Context) => {
-        var location = ctx.path.shift() || ''
+    main: Handle['main'] = (partial_ctx: PartialContext) => {
+        let location = partial_ctx.path.shift() ?? ''
     
         // set request context
-        ctx.context = {...ctx.args}
-        ctx.context.extensions = this.extensions
-        ctx.context.location = location
+        let ctx: Context = {
+            ...partial_ctx,
+            context: {
+                ...partial_ctx.args,
+                extensions: this.extensions,
+                location,
+            }
+        }
         
         // Authenticate using user&pass, else using ip
         this.root.authenticate(ctx.req.headers.authorization as BasicAuth|undefined, ctx.ip, this.wg_config.subnet, (user, err) => {
@@ -55,14 +58,14 @@ export default class implements Handle {
             if (user && user.is_admin) ctx.context.extensions = {...ctx.context.extensions, ...this.admin_extensions}
         
             // Extension
-            if (location in ctx.context.extensions) {
-                let ext = ctx.context.extensions[location]
+            if (ctx.context.extensions.has(location)) {
+                let ext = ctx.context.extensions.get(location) as Extension
                 // If login required
                 if (!user && ext.requires_login(ctx.path)) {
                     ctx.res.writeHead(307, {Location: "/login"})
                     return ctx.res.end()
                 }
-                if (user && !user.is_admin && ext.requires_admin(ctx.path)) {
+                else if (user && !user.is_admin && ext.requires_admin(ctx.path)) {
                     ctx.res.writeHead(307, {Location: "/"})
                     return ctx.res.end()
                 }

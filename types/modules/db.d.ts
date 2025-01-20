@@ -3,7 +3,7 @@ declare interface DB {
     db: any
     prefix: string
 
-    __formatTableName(name: string): string
+    formatTableName(name: string): string
 
     createTable(table: string, columns: string[]): void
 
@@ -15,7 +15,7 @@ declare interface DB {
 
     renameColumn(table: string, old_column: string, new_column: string, callback: (err: Error|null) => void): void
     
-    select(table: string, columns: string[], where: string, order_by: string, params: {}, callback: (err: Error|null, data: any) => void): void
+    select(table: string, columns: string[], where: string|null, order_by: string|null, params: {}, callback: (err: Error|null, data: any) => void): void
 
     insert(table: string, columns: string[], values: [], callback: (err: Error|null) => void): void
 

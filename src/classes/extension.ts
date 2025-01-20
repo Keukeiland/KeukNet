@@ -1,37 +1,28 @@
+import { Environment } from "nunjucks"
+import { Tables } from "./tables.ts"
+
 export abstract class ExtensionBase implements Extension {
     admin_only = false
     tables = false
-    dependencies: Extension['dependencies']
-    initialized_deps = new DependencyMapImpl()
-    name: Extension['name']
-    title: Extension['title']
+    dependencies: Extension['dependencies'] = []
+    initialized_deps: DependencyMap = new DependencyMapImpl()
+    name: Extension['name'] = "default_name"
+    title: Extension['title'] = "Default Title"
 
-    static init(inst: ExtensionBase, context: InitContext): ResultStatus {
+    static init(inst: ExtensionBase, context: InitContext): void | Promise<void> {
         let global: any = context.modules
         let path = context.path
         let database = context.database
 
-        // Init dependencies
-        for (const dep of inst.dependencies) {
-            switch (dep) {
-                case 'fetch': {
-                    inst.initialized_deps.set('fetch', new global.Fetch(path))
-                    break
-                }
-                default: {
-                    inst.initialized_deps.set(dep, global[dep])
-                }
-            }
-        }
+        inst.initialized_deps = new DependencyMapImpl(global, context)
+
         // Init db
         if (inst.tables) {
-            // create interface
-            inst.initialized_deps.set('db', new global.DB(database, this.name))
             // init tables
-            new ((require(`${path}tables`))(global.Tables))(database, inst.initialized_deps.get('db'), this.name)
+            let tables = new (require(`${path}tables`).default)(database, inst.initialized_deps.get('DB'), inst.name) as Tables
+            let result = tables.migrate()
+            return result
         }
-
-        return [true]
     }
 
     abstract init: Extension['init']
@@ -74,18 +65,22 @@ export abstract class ExtensionBase implements Extension {
 
     return_text: Extension['return_text'] = (ctx, item) => {
         const {req, res} = ctx
-        let [texts, nj, content] = this.initialized_deps.massGet('texts', 'nj', 'content')
+        let [texts, nj, content]: [any, Environment, any] = this.initialized_deps.massGet('texts', 'nj', 'content')
 
         ctx.context.__render_item = texts[item]
         nj.renderString(
             '{% extends "layout.html" %}{% block body %}{{__render_item |safe}}{% endblock %}',
-            ctx.context, (err: null|Error, data: FileData) => {
+            ctx.context, (err: Error | null, data: FileData) => {
                 if (err) {
                     res.writeHead(500)
                     return res.end()
                 }
                 res.writeHead(200, content.HTML)
-                return res.end(data)
+
+                if (data !== null)
+                    return res.end(data)
+                else
+                    return res.end()
         })
     }
 
@@ -106,22 +101,31 @@ export abstract class ExtensionBase implements Extension {
                 return res.end()
             }
             res.writeHead(success_code, headers)
-            return res.end(data)
+
+            if (data !== null)
+                return res.end(data)
+            else
+                return res.end()
         })
     }
 
     return_file: Extension['return_file'] = (ctx, file) => {
         const {res} = ctx
-        let [fetch, content] = this.initialized_deps.massGet('fetch', 'content')
+        let [fetch, content]: [Fetch, ContentType] = this.initialized_deps.massGet('Fetch', 'content')
 
-        fetch.file(file, (data: FileData, filetype: string, err?: Error) => {
+        fetch.file(file, (data?: FileData, filetype?: string, err?: Error) => {
             if (err) {
                 res.writeHead(404)
                 res.end()
                 return
             }
+            // @ts-ignore
             res.writeHead(200, content[filetype])
-            res.end(data)
+
+            if (data != null)
+                return res.end(data)
+            else
+                return res.end()
         })
     }
 
@@ -171,21 +175,49 @@ export abstract class ExtensionBase implements Extension {
     }
 }
 
-class DependencyMapImpl extends Map<string, any> implements DependencyMap {
-    override set(key: string, value: any): this {
-        if (!this.has(key))
-            super.set(key, value)
+class DependencyMapImpl implements DependencyMap {
+    private global: any
+    private context: InitContext | {}
+    private map = new Map<string, any>()
+
+    constructor(global?: any, context?: InitContext) {
+        if (global !== undefined && context !== undefined) {
+            this.global = global
+            this.context = context
+        }
+        else {
+            this.global = {}
+            this.context = {}
+        }
+    }
+
+    forEach = this.map.forEach
+    has = this.map.has
+
+    set(key: string, value: any): this {
+        if (!this.map.has(key))
+            this.map.set(key, value)
         return this
     }
 
-    override delete(key: string): boolean {
-        return false
-    }
-    
-    override clear(): void {}
+    get(key: string) {
+        if (!this.map.has(key)) {
+            // Assumes type of not instantiated modules to be `Function`
+            let dep: any
+            if (typeof this.global[key] === typeof Function) {
+                dep = new this.global[key]
+                dep.init(this.context)
+            }
+            else
+                dep = this.global[key]
 
-    massGet(...items: string[]): any[] {
-        let result: any[] = []
+            this.map.set(key, dep)
+        }
+        return this.map.get(key)
+    }
+
+    massGet<S extends string[]>(...items: S): VariableSizeArray<S, any> {
+        let result = [] as VariableSizeArray<S, any>
         items.forEach((v, _, __) => 
             result.push(this.get(v))
         )
