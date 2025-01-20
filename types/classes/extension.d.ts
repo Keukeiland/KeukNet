@@ -14,7 +14,7 @@ declare interface Extension {
 
     handle_req(ctx: Context): void | Error
 
-    handle(ctx: Context, mods: DependencyMap): void | Error
+    handle(ctx: Context): void | Error
 
     return(ctx: Context, err?: Error, location?: string, err_code?: number): void
 
@@ -29,6 +29,8 @@ declare interface Extension {
     set_cookie(key: string, value: any, secure?: boolean): string
 
     del_cookie(key: string): string
+
+    get_dependencies: DependencyMap['massGet']
 }
 
 declare interface RootExtension extends Extension {

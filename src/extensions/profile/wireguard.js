@@ -1,6 +1,6 @@
-const { exec } = require('child_process')
-const fs = require('fs')
-const readline = require('readline')
+import { exec } from 'child_process'
+import fs from 'fs'
+import readline from 'readline'
 
 var tmp_dir = ""
 var configs_dir = ""
@@ -8,7 +8,7 @@ var file_lines = []
 var configs = {}
 var config = {}
 
-exports.init = function (path, wg_config, tmp_path) {
+export function init(path, wg_config, tmp_path) {
     config = wg_config
     configs_dir = path
     tmp_dir = tmp_path
@@ -153,7 +153,7 @@ function __add(uuid, pubkey, prekey, privkey, ip, callback) {
     }) 
 }
 
-exports.create = function (uuid, ip, callback) {
+export function create(uuid, ip, callback) {
     ip = config.subnet + ip.toString(16)
     
     exec("wg genkey", function (err, priv, stderr) {
@@ -173,13 +173,13 @@ exports.create = function (uuid, ip, callback) {
     })
 }
 
-exports.delete = function (uuid, callback) {
+export function remove(uuid, callback) {
     __remove(uuid, function () {
         return callback()
     })
 }
 
-exports.getConfig = function (uuid, callback) {
+export function getConfig(uuid, callback) {
     fs.readFile(`${configs_dir+uuid}.conf`, 'utf8', function (err, data) {
         if (err) return callback(undefined, err)
         fs.unlink(`${configs_dir+uuid}.conf`, function (err) {

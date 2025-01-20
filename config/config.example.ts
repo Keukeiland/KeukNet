@@ -24,9 +24,9 @@ export default {
     /** The port to listen on for HTTPS traffic. Defaults to 443 */
     https_port: 443,
     /** The path to your HTTPS certificate-set's private key. */
-    private_key_path: `${__dirname}/../certs/privkey.pem`,
+    private_key_path: `${import.meta.dirname}/../certs/privkey.pem`,
     /** The path to your HTTPS certificate-set's certificate. */
-    server_cert_path: `${__dirname}/../certs/cert.pem`,
+    server_cert_path: `${import.meta.dirname}/../certs/cert.pem`,
     /** The path to your HTTPS certificate-set's CA-chain. */
-    ca_cert_path: `${__dirname}/../certs/ca.pem`,
+    ca_cert_path: `${import.meta.dirname}/../certs/ca.pem`,
 }

@@ -9,18 +9,18 @@ export abstract class ExtensionBase implements Extension {
     name: Extension['name'] = "default_name"
     title: Extension['title'] = "Default Title"
 
-    static init(inst: ExtensionBase, context: InitContext): void | Promise<void> {
+    static async init(inst: ExtensionBase, context: InitContext): Promise<void> {
         let global: any = context.modules
         let path = context.path
-        let database = context.database
+        let knex = context.knex
 
         inst.initialized_deps = new DependencyMapImpl(global, context)
 
         // Init db
         if (inst.tables) {
             // init tables
-            let tables = new (require(`${path}tables`).default)(database, inst.initialized_deps.get('DB'), inst.name) as Tables
-            let result = tables.migrate()
+            let tables = new ((await import(`${path}tables`)).default)(knex, inst.initialized_deps.get('Knex'), inst.name) as Tables
+            let result = await tables.migrate()
             return result
         }
     }
@@ -40,7 +40,7 @@ export abstract class ExtensionBase implements Extension {
 
     handle_req: Extension['handle_req'] = (ctx: Context) => {
         ctx.context.extension = this as unknown as Extension
-        return this.handle(ctx, this.initialized_deps)
+        return this.handle(ctx)
     }
 
     abstract handle: Extension['handle']
@@ -86,7 +86,7 @@ export abstract class ExtensionBase implements Extension {
 
     return_html: Extension['return_html'] = (ctx, item, err, err_code=500, success_code=200, headers=undefined) => {
         const {req, res} = ctx
-        let [nj, content] = this.initialized_deps.massGet('nj', 'content')
+        let [nj, content] = this.get_dependencies('nj', 'content')
         
         if (err) {
             res.writeHead(err_code)
@@ -111,9 +111,9 @@ export abstract class ExtensionBase implements Extension {
 
     return_file: Extension['return_file'] = (ctx, file) => {
         const {res} = ctx
-        let [fetch, content]: [Fetch, ContentType] = this.initialized_deps.massGet('Fetch', 'content')
+        let [fetch, content]: [Fetch, ContentType] = this.get_dependencies('Fetch', 'content')
 
-        fetch.file(file, (data?: FileData, filetype?: string, err?: Error) => {
+        fetch.file(file, (data: FileData, filetype: string, err) => {
             if (err) {
                 res.writeHead(404)
                 res.end()
@@ -146,7 +146,7 @@ export abstract class ExtensionBase implements Extension {
     }
 
     set_cookie: Extension['set_cookie'] = (key, value, secure=false) => {
-        let cookie = this.initialized_deps.get('cookie')
+        let [cookie] = this.get_dependencies('cookie')
 
         if (secure)
             return cookie.serialize(
@@ -164,7 +164,7 @@ export abstract class ExtensionBase implements Extension {
     }
 
     del_cookie: Extension['del_cookie'] = (key) => {
-        let cookie = this.initialized_deps.get('cookie')
+        let [cookie] = this.get_dependencies('cookie')
 
         return cookie.serialize(
             key,
@@ -173,6 +173,8 @@ export abstract class ExtensionBase implements Extension {
             }
         )
     }
+
+    get_dependencies: Extension['get_dependencies'] = (...args) => this.initialized_deps.massGet(...args)
 }
 
 class DependencyMapImpl implements DependencyMap {

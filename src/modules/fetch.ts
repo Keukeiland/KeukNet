@@ -30,9 +30,12 @@ export default class implements Module, Fetch {
         // read the file
         readFile(file_path)
             // cache and return the data
-            .then((data: FileData) => {
-                if (!this.BIN_EXTS.has(filetype))
-                    data = data.toString('utf8')
+            .then((raw_data: Buffer) => {
+                let data: FileData = null
+                if (this.BIN_EXTS.has(filetype))
+                    data = raw_data as unknown as string
+                else
+                    data = raw_data.toString('utf8')
 
                 this.cache.set(file_path, data)
                 return callback(data, filetype)

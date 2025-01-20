@@ -1,22 +1,50 @@
-import sqlite3 from 'sqlite3'
-import { promises as fs } from 'fs'
-import http, { IncomingMessage, RequestListener, ServerResponse } from 'http'
-import http2, { Http2ServerRequest } from 'http2'
+import http2 from 'http2'
+import http1, { IncomingMessage, ServerResponse } from 'http'
+import Knex from 'knex'
+import dotenv from 'dotenv'
+import {cookie, config, Log } from './modules.ts'
+import * as modules from './modules.ts'
+import Handle from './handle.ts'
 
 // enable use of dotenv
-import dotenv from 'dotenv'
 dotenv.config()
 
-// set up global context
-import {cookie, config, Log} from './modules.ts'
-import * as modules from './modules.ts'
+// init database
+const knex = Knex({
+    client: 'sqlite3',
+    connection: {
+        filename: `${import.meta.dirname}/../data/db.sqlite`
+    },
+    /**
+     * `_<name>_<table>` => selects `_<name>_<table>`
+     * `_<table>`        => selects `_<prefix>_<table>`
+     * `<table>`         => selects `<table>`
+     */
+    wrapIdentifier(value, origImpl, queryContext) {
+        if (queryContext !== undefined && 'prefix' in queryContext) {
+            if (value.startsWith('_')) {
+                if (!value.substring(1).includes('_')) {
+                    value = `_${queryContext.prefix}${value}`
+                }
+            }
+        }
+        return origImpl(value)
+    },
+})
 
-const db = new (sqlite3.verbose()).Database(`${import.meta.dirname}/../data/db.sqlite`)
-
+// prepare database
+if (!await knex.schema.hasTable('db_table_versions')) {
+    await knex.schema
+        .createTable('db_table_versions', (table) => {
+            table.string('table_id').notNullable().unique()
+            table.integer('version').notNullable().defaultTo(1)
+        })
+}
 // get request handler
-import Handle from './handle.ts'
-let handle = new Handle(modules, db)
-// set up modules
+let handle = new Handle(modules)
+handle.init(modules, knex)
+
+// set up logging
 const log: Log = new Log(config.logging)
 
 // handle all requests for both HTTPS and HTTP/2 or HTTP/nginx
@@ -134,45 +162,45 @@ function httpsRedirect(req: IncomingMessage, res: ServerResponse) {
 }
 
 
-function startServer(http_enabled: boolean, https_enabled: boolean) {
+async function startServer(http_enabled: boolean, https_enabled: boolean) {
     if (https_enabled) {
-        let key = function (location: string, callback: (data?: any) => void) {
-            fs.readFile(location, "utf8")
-            .then(callback)
-            .catch((err: Error) => {
-                log.err(`Failed fetching key at: '${location}'`)
-                callback(undefined)
+        let key = async (location: string) => {
+            return new Promise<string | undefined>(async (resolve, reject) => {
+                (await import('fs')).promises.readFile(location, "utf8")
+                .then(resolve)
+                .catch((err: Error) => {
+                    log.err(`Failed fetching key at: '${location}'`)
+                    resolve(undefined)
+                })
             })
         }
 
         log.status("Fetching encryption keys")
-        // Private key
-        key(config.private_key_path, function(private_key) {
-            // Certificate
-            key(config.server_cert_path, function(certificate) {
-                // Certificate chain
-                key(config.ca_cert_path, function(certificate_authority) {
-                    log.status("Encryption keys fetched")
-                    // Start server
-                    http2.createSecureServer({
-                            key: private_key,
-                            cert: certificate,
-                            ca: certificate_authority,
-                            allowHTTP1: true,
-                        }, requestListener)
-                        .listen(
-                            config.https_port,
-                            config.host,
-                            () => log.serverStart("https", config.domain, config.host, config.https_port)
-                        )
-                })
-            })
-        })
+
+        const private_key = await key(config.private_key_path)
+        const certificate = await key(config.server_cert_path)
+        const certificate_authority = await key(config.ca_cert_path)
+
+        log.status("Encryption keys fetched")
+
+        // Start server
+        http2.createSecureServer({
+                key: private_key,
+                cert: certificate,
+                ca: certificate_authority,
+                allowHTTP1: true,
+            }, requestListener)
+            .listen(
+                config.https_port,
+                config.host,
+                () => log.serverStart("https", config.domain, config.host, config.https_port)
+            )
     }
     if (http_enabled) {
         // Start server
-        http.createServer(
-            https_enabled ? httpsRedirect : requestListenerCompat
+        http1.createServer(
+            // @ts-expect-error
+            https_enabled ? httpsRedirect : requestListener
         ).listen(
             config.http_port,
             config.host,

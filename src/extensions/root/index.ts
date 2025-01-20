@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { ExtensionBase } from "../../modules"
+import { ExtensionBase, Knex } from "../../modules.ts"
 import { readdirSync } from "fs"
 
 
@@ -15,15 +15,12 @@ export default class extends ExtensionBase implements RootExtension {
     ip_scope: string
     salt: string
 
-    db: Database
-
 
     override init = (context: InitContext) => {
         let modules = context.modules
         let data_path = context.data_path
         this.ip_scope = context.modules.wg_config.ip_scope
         this.salt = context.modules.config.salt
-        this.db = context.database
 
         this.favicons_path = data_path+'favicons/'
         try {
@@ -42,9 +39,9 @@ export default class extends ExtensionBase implements RootExtension {
         return false
     }
 
-    override handle = (ctx: Context, deps: DependencyMap) => {
+    override handle = (ctx: Context) => {
         var location = ctx.path.shift()
-        let [db]: [DB] = deps.massGet('DB')
+        let [knex]: [Knex] = this.get_dependencies('Knex')
 
         switch (location) {
             case '':
@@ -126,13 +123,19 @@ export default class extends ExtensionBase implements RootExtension {
                                 try {
                                     args = decodeURIComponent(args)
                                 } catch {}
-                                db.update('user', ['pfp_code=$args'], 'id=$id', [args, ctx.context.user.id], (err: Error|null) => {
-                                    if (err)
-                                        ctx.res.writeHead(500)
-                                    else
-                                        ctx.res.writeHead(307, {"Location": "/"})
-                                    ctx.res.end()
-                                })
+                                
+                                knex.query('user')
+                                    .update('pfp_code', args)
+                                    .where('id', ctx.context.user.id)
+                                    .then(
+                                        (v) => {
+                                            ctx.res.writeHead(307, {"Location": "/"})
+                                            ctx.res.end()
+                                        }, (err) => {
+                                            ctx.res.writeHead(500)
+                                            ctx.res.end()
+                                        }
+                                    )
                                 return
                             }
                             else
@@ -156,7 +159,9 @@ export default class extends ExtensionBase implements RootExtension {
         }
     }
 
-    authenticate(auth: BasicAuth | undefined, ip: string, subnet: string, callback: (user: undefined|User, err?: Error) => void): void {
+    authenticate: RootExtension['authenticate'] = (auth, ip, subnet, callback) => {
+        let [knex]: [Knex] = this.get_dependencies('Knex')
+
         if (auth) {
             // Try to get name and password
             this.decrypt_auth(auth, (name, password, err) => {
@@ -164,24 +169,45 @@ export default class extends ExtensionBase implements RootExtension {
                     return callback(undefined, err)
                 }
                 // Auth using name and password
-                this.db.get("SELECT * FROM user WHERE name=$name", name, (err?: Error|null, user?: User) => {
-                    if (err === null) err = undefined
-    
-                    if (user) {
-                        if (password == user.password) {
-                            return callback(user, err)
-                        }
-                    }
-                    return callback(undefined, new Error("Wrong name or password"))
-                })
+                if (name !== undefined) {
+                    knex.query('user')
+                        .select('*')
+                        .where('name', name)
+                        .then(
+                            (result: User[]) => {
+                                const user = result[0]
+                                if (user !== undefined && password == user.password) {
+                                    return callback(user, err)
+                                }
+                                else {
+                                    return callback(undefined, new Error('Wrong name or password'))
+                                }
+                            },
+                            (err) => {
+                                console.log(err)
+                                return callback(undefined, new Error("Failed to check password"))
+                            }
+                        )
+                }
             })
         }
         else if (ip.startsWith(subnet)) {
             // Try using IP-address if no name and password
-            this.db.get("SELECT u.* FROM user u JOIN _profile_device p ON p.user_id = u.id WHERE p.ip=$ip", ip, function (err?: Error|null, user?: User) {
-                if (err === null) err = undefined
-                return callback(user, err)
-            })
+            return knex.query({u: 'user', p: '_profile_device'})
+                .select<User>('u.*')
+                .join('_profile_device', 'u.id', '=', 'p.user_id')
+                .where('p.ip', ip)
+                .first()
+                .then(
+                (user) => {
+                    console.log(user, "def")
+                    callback(user)
+                },
+                (err) => {
+                    console.log(err, "gef")
+                    callback(undefined, new Error("Failed to get user by IP."))
+                }
+            )
         }
         else
             return callback(undefined, undefined)
@@ -208,26 +234,32 @@ export default class extends ExtensionBase implements RootExtension {
     }
     
     addUser(name: User['name'], password: User['password'], callback: (err?: Error) => void) {
+        let [knex]: [Knex] = this.get_dependencies('Knex')
+
         password = this.hash_pw(password)
         // Check if username is already taken
         this.exists(name, (exists, err) => {
             if (err) return callback(err)
             if (exists) return callback(new Error("Username already taken"))
             // add user to db
-            this.db.run("INSERT INTO user(name,password,pfp_code) VALUES($name,$password,$pfp_code)", [name, password, 'seed='+name], (err?: Error|null) => {
-                if (err === null) err = undefined
-                return callback(err)
-            })
+            knex.query('user')
+                // @ts-expect-error
+                .insert({name, password, pfp_code: `seed=${name}`})
+                .then(() => callback(), (err) => callback(err))
         })
     }
 
     private exists(name: User['name'], callback: (exists: boolean, err?: Error) => void): void {
+        let [knex]: [Knex] = this.get_dependencies('Knex')
+
         // check if name already exists
-        this.db.get("SELECT EXISTS(SELECT 1 FROM user WHERE name=$name)", name, function (err?: Error|null, result?: Object) {
-            if (err === null) err = undefined
-            let exists = false
-            if (result) exists = !!Object.values(result)[0]
-            return callback(exists, err)
-        })
+        knex.query('user')
+            .select('id')
+            .where('name', name)
+            .then((value) => {
+                callback(!!value.length)
+            }, (err) => {
+                callback(false, err)
+            })
     }
 }

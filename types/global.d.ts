@@ -17,7 +17,7 @@ declare type Context = {
     res: Http2ServerResponse
     
     ip: string
-    cookies: Record<string, string>
+    cookies: Record<string, string | undefined>
     path: string[]
     args: Map<string, string>
     data?: {bytes: Buffer, raw: string, form: any}
@@ -34,7 +34,7 @@ declare type PartialContext = {
     res: Http2ServerResponse
     
     ip: string
-    cookies: Record<string, string>
+    cookies: Record<string, string | undefined>
     path: string[]
     args: Map<string, string>
     data?: {bytes: Buffer, raw: string, form: any}
@@ -51,10 +51,10 @@ declare type User = {
 
 declare type InitContext = {
     modules: any,
-    database: Database,
     path: string,
     data_path: string,
     name: string,
+    knex: import('knex').Knex,
 }
 
 declare type ResultStatus = [Okay: false, Error: Error] | [Okay: true]

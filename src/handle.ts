@@ -1,5 +1,5 @@
-/** @ts-ignore 2305 */
-import { load } from "./extman.cjs"
+import { Knex } from "knex"
+import { load } from "./extman.ts"
 import Log from "./modules/log.ts"
 
 let log = new Log(true)
@@ -13,18 +13,20 @@ export default class implements Handle {
     extensions = new Map<string, Extension>()
     admin_extensions = new Map<string, Extension>()
 
-    constructor(modules: any, database: any) {
+    constructor(modules: any) {
         let config = modules.config
         this.wg_config = modules.wg_config
         let nj: Environment = modules.nj
         nj.addGlobal('dicebear_host', config.dicebear_host)
         nj.addGlobal('client_location', config.client_location)
-    
-        this.root = load(modules, database, 'root') as RootExtension
+    }
+
+    init: Handle['init'] = async (modules, knex) => {
+        this.root = await load(modules, 'root', knex) as RootExtension
     
         for (const path of this.extensions_list) {
             try {
-                this.extensions.set(path, load(modules, database, path) as Extension)
+                this.extensions.set(path, await load(modules, path, knex) as Extension)
             } catch (err: any) {
                 log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
             }

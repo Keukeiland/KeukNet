@@ -5,17 +5,18 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "npx tsc ./src/index.ts && node build/index.js",
-    "dev": "sudo npx nodemon src/index.ts -e . --ignore ./data/ --exec 'tsx'"
+    "start": "npx tsc --outDir ./build ./src/index.ts && node build/index.js",
+    "dev": "tsx watch ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
   "license": "MPL-2.0",
   "dependencies": {
-    "cookie": "^0.6.0",
+    "cookie": "1.0.1",
     "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
     "nunjucks": "^3.2.4",
     "sqlite3": "^5.1.6",
-    "typescript": "^5.4.5"
+    "typescript": "5.6.3"
   },
   "repository": {
     "type": "git",
@@ -27,9 +28,9 @@
   "homepage": "https://keuk.net/",
   "devDependencies": {
     "@types/cookie": "^0.6.0",
-    "@types/node": "^20.12.12",
+    "@types/knex": "^0.15.2",
+    "@types/node": "22.7.5",
     "@types/nunjucks": "^3.2.6",
-    "nodemon": "^3.1.0",
     "tsx": "^4.19.2"
   }
 }

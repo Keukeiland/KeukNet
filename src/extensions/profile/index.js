@@ -6,15 +6,16 @@ export default class extends ExtensionBase {
     title = 'Network'
     tables = true
     dependencies = ['content','nj','fetch']
-    wg = require('./wireguard')
+    wg = null
     wg_config = null
 
 
-    init(context) {
+    async init(context) {
         let config = context.modules.config
         let data_path = context.data_path
         this.wg_config = context.modules.wg_config
 
+        this.wg = await import('./wireguard')
         this.wg.init(data_path, this.wg_config, config.tmp_dir)
 
         return ExtensionBase.init(this, context)
@@ -48,7 +49,7 @@ export default class extends ExtensionBase {
                     // Delete db entry
                     db.delete('device', 'uuid=$uuid', [ctx.args.get('uuid')], (err) => {
                         // Delete wireguard profile
-                        this.wg.delete(ctx.args.get('uuid'), () => {
+                        this.wg.remove(ctx.args.get('uuid'), () => {
                             return this.return(ctx, err, location='/profile')
                         })
                     })

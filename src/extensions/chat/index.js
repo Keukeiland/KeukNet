@@ -20,7 +20,7 @@ export default class extends ExtensionBase {
     }
 
     handle(ctx, deps) {
-        let [] = this.initialized_deps.massGet()
+        let [] = this.deps.massGet()
         var location = ctx.path.shift()
 
         if (!location) {
