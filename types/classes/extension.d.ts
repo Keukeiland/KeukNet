@@ -1,7 +1,6 @@
 declare interface Extension {
     admin_only: boolean
     tables: boolean
-    dependencies: string[]
 
     name: string
     title: string

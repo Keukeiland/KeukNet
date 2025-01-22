@@ -8,7 +8,6 @@ export default class extends ExtensionBase implements RootExtension {
     override name = 'root'
     override title = 'Home'
     override tables = true
-    override dependencies = ['content','nj','fetch','texts','cookie']
 
     favicons: string[] = []
     favicons_path: string

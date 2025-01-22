@@ -15,31 +15,10 @@ export default class implements Module {
     }
 
     query = (table: string | object) => {
-        // switch (typeof table) {
-        //     case 'string': {
-        //         table = this.parseTableName(table)
-        //         break
-        //     }
-        //     case 'object': {
-        //         Object.keys(table).forEach((key) => {
-        //             // @ts-expect-error
-        //             table[key] = this.parseTableName(table[key])
-        //         })
-        //         break
-        //     }
-        // }
         return this.knex(table as never).queryContext({prefix: this.prefix})
     }
 
     schema = () => {
         return this.knex.schema.queryContext({prefix: this.prefix})
-    }
-
-    private parseTableName(name: string): string {
-        if (name.startsWith('_'))
-            return name
-        else {
-            return `_${this.prefix}_${name}`
-        }
     }
 }

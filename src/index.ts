@@ -209,4 +209,3 @@ async function startServer(http_enabled: boolean, https_enabled: boolean) {
 }
 
 startServer(true, !config.nginx)
-    

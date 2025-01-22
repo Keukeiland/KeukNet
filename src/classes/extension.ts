@@ -5,7 +5,6 @@ import { unpack } from "../util.ts"
 export abstract class ExtensionBase implements Extension {
     admin_only = false
     tables = false
-    dependencies: Extension['dependencies'] = []
     initialized_deps: DependencyMap = new DependencyMapImpl()
     name: Extension['name'] = "default_name"
     title: Extension['title'] = "Default Title"
@@ -26,7 +25,9 @@ export abstract class ExtensionBase implements Extension {
         }
     }
 
-    abstract init: Extension['init']
+    init: Extension['init'] = (context) => {
+        return ExtensionBase.init(this, context)
+    }
 
     /**
      * @returns true if the path requires being logged in, else false
