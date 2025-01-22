@@ -1,5 +1,6 @@
 import { Environment } from "nunjucks"
 import { Tables } from "./tables.ts"
+import { unpack } from "../util.ts"
 
 export abstract class ExtensionBase implements Extension {
     admin_only = false
@@ -38,9 +39,9 @@ export abstract class ExtensionBase implements Extension {
         return this.admin_only
     }
 
-    handle_req: Extension['handle_req'] = (ctx: Context) => {
+    handle_req: Extension['handle_req'] = async (ctx: Context) => {
         ctx.context.extension = this as unknown as Extension
-        return this.handle(ctx)
+        return await this.handle(ctx)
     }
 
     abstract handle: Extension['handle']
@@ -93,7 +94,7 @@ export abstract class ExtensionBase implements Extension {
             return res.end()
         }
         
-       headers = {...content.HTML, ...headers}
+        headers = {...content.HTML, ...headers}
 
         nj.render(this.name+'/'+item+'.html', ctx.context, (err: null|Error, data: FileData) => {
             if (err) {
@@ -109,24 +110,22 @@ export abstract class ExtensionBase implements Extension {
         })
     }
 
-    return_file: Extension['return_file'] = (ctx, file) => {
+    return_file: Extension['return_file'] = async (ctx, file) => {
         const {res} = ctx
         let [fetch, content]: [Fetch, ContentType] = this.get_dependencies('Fetch', 'content')
 
-        fetch.file(file, (data: FileData, filetype: string, err) => {
-            if (err) {
-                res.writeHead(404)
-                res.end()
-                return
-            }
-            // @ts-ignore
-            res.writeHead(200, content[filetype])
+        const [result, err] = await fetch.file(file).then(unpack<[string, string]>)
+        if (err) {
+            res.writeHead(404)
+            res.end()
+            return
+        }
 
-            if (data != null)
-                return res.end(data)
-            else
-                return res.end()
-        })
+        const [data, filetype] = result
+
+        // @ts-ignore 7053
+        res.writeHead(200, content[filetype])
+        res.end(data)
     }
 
     return_data: Extension['return_data'] = (ctx, data, err, headers, err_code=404) => {

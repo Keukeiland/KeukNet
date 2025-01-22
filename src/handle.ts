@@ -1,6 +1,6 @@
-import { Knex } from "knex"
 import { load } from "./extman.ts"
 import Log from "./modules/log.ts"
+import { unpack } from "./util.ts"
 
 let log = new Log(true)
 
@@ -40,7 +40,7 @@ export default class implements Handle {
         })
     }
     
-    main: Handle['main'] = (partial_ctx: PartialContext) => {
+    main: Handle['main'] = async (partial_ctx: PartialContext) => {
         let location = partial_ctx.path.shift() ?? ''
     
         // set request context
@@ -54,30 +54,33 @@ export default class implements Handle {
         }
         
         // Authenticate using user&pass, else using ip
-        this.root.authenticate(ctx.req.headers.authorization as BasicAuth|undefined, ctx.ip, this.wg_config.subnet, (user, err) => {
-            ctx.context.user = user
-            if (err) ctx.context.auth_err = err
-            if (user && user.is_admin) ctx.context.extensions = {...ctx.context.extensions, ...this.admin_extensions}
-        
-            // Extension
-            if (ctx.context.extensions.has(location)) {
-                let ext = ctx.context.extensions.get(location) as Extension
-                // If login required
-                if (!user && ext.requires_login(ctx.path)) {
-                    ctx.res.writeHead(307, {Location: "/login"})
-                    return ctx.res.end()
-                }
-                else if (user && !user.is_admin && ext.requires_admin(ctx.path)) {
-                    ctx.res.writeHead(307, {Location: "/"})
-                    return ctx.res.end()
-                }
-                ext.handle_req(ctx)
+        const [user, err] = await this.root.authenticate(ctx.req.headers.authorization as BasicAuth|undefined, ctx.ip, this.wg_config.subnet).then(unpack<User>)
+
+        ctx.context.user = user
+        ctx.context.auth_err = err
+
+        if (user && user.is_admin)
+            ctx.context.extensions = {...ctx.context.extensions, ...this.admin_extensions}
+    
+        // Extension
+        const selected_extension = ctx.context.extensions.get(location)
+        if (selected_extension) {
+            // If login required
+            if (!user && selected_extension.requires_login(ctx.path)) {
+                ctx.res.writeHead(307, {Location: "/login"})
+                ctx.res.end()
             }
-            // Root extension
-            else {
-                ctx.path.unshift(location)
-                this.root.handle_req(ctx)
+            else if (user && !user.is_admin && selected_extension.requires_admin(ctx.path)) {
+                ctx.res.writeHead(307, {Location: "/"})
+                ctx.res.end()
             }
-        })
+            else
+                selected_extension.handle_req(ctx)
+        }
+        // Root extension
+        else {
+            ctx.path.unshift(location)
+            this.root.handle_req(ctx)
+        }
     }
 }

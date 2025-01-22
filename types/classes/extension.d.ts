@@ -12,9 +12,9 @@ declare interface Extension {
 
     requires_admin(path: string[]): boolean
 
-    handle_req(ctx: Context): void | Error
-
-    handle(ctx: Context): void | Error
+    handle_req(ctx: Context): Promise<void | Error>
+    
+    handle(ctx: Context): void | Error | Promise<void | Error>
 
     return(ctx: Context, err?: Error, location?: string, err_code?: number): void
 
@@ -34,7 +34,7 @@ declare interface Extension {
 }
 
 declare interface RootExtension extends Extension {
-    authenticate(auth: BasicAuth|undefined, ip: string, subnet: string, callback: (user: undefined|User, err?: Error) => void): void
+    authenticate(auth: BasicAuth|undefined, ip: string, subnet: string): Promise<undefined | User | Error>
     addUser(name: User['name'], password: User['password'], callback: (err?: Error) => void): void
 }
 

@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { ExtensionBase, Knex } from "../../modules.ts"
 import { readdirSync } from "fs"
+import { unpack } from '../../util.ts'
 
 
 export default class extends ExtensionBase implements RootExtension {
@@ -32,14 +33,14 @@ export default class extends ExtensionBase implements RootExtension {
         return ExtensionBase.init(this, context)
     }
 
-    override requires_login = (path: string[]) => {
+    override requires_login: Extension['requires_login'] = (path) => {
         if (path.at(0) == '_') {
             return true
         }
         return false
     }
 
-    override handle = (ctx: Context) => {
+    override handle: Extension['handle'] = async (ctx) => {
         var location = ctx.path.shift()
         let [knex]: [Knex] = this.get_dependencies('Knex')
 
@@ -124,18 +125,16 @@ export default class extends ExtensionBase implements RootExtension {
                                     args = decodeURIComponent(args)
                                 } catch {}
                                 
-                                knex.query('user')
+                                const head: [number, {}] = await knex.query('user')
                                     .update('pfp_code', args)
                                     .where('id', ctx.context.user.id)
                                     .then(
-                                        (v) => {
-                                            ctx.res.writeHead(307, {"Location": "/"})
-                                            ctx.res.end()
-                                        }, (err) => {
-                                            ctx.res.writeHead(500)
-                                            ctx.res.end()
-                                        }
+                                        () => [307, {"Location": "/"}],
+                                        () => [500, {}]
                                     )
+
+                                ctx.res.writeHead(...head)
+                                ctx.res.end()
                                 return
                             }
                             else
@@ -159,74 +158,57 @@ export default class extends ExtensionBase implements RootExtension {
         }
     }
 
-    authenticate: RootExtension['authenticate'] = (auth, ip, subnet, callback) => {
+    authenticate: RootExtension['authenticate'] = async (auth, ip, subnet) => {
         let [knex]: [Knex] = this.get_dependencies('Knex')
 
         if (auth) {
             // Try to get name and password
-            this.decrypt_auth(auth, (name, password, err) => {
-                if (err) {
-                    return callback(undefined, err)
-                }
-                // Auth using name and password
-                if (name !== undefined) {
-                    knex.query('user')
-                        .select('*')
-                        .where('name', name)
-                        .then(
-                            (result: User[]) => {
-                                const user = result[0]
-                                if (user !== undefined && password == user.password) {
-                                    return callback(user, err)
-                                }
-                                else {
-                                    return callback(undefined, new Error('Wrong name or password'))
-                                }
-                            },
-                            (err) => {
-                                console.log(err)
-                                return callback(undefined, new Error("Failed to check password"))
-                            }
-                        )
-                }
-            })
+            const val = this.decrypt_auth(auth)
+            if (val instanceof Error)
+                return val
+
+            const [name, password] = val
+
+            // Auth using name and password
+            const [user, err] = await knex
+                .query('user')
+                .select<User>('*')
+                .where('name', name)
+                .first()
+                .then(unpack<User>)
+
+            if (user && password == user.password)
+                return user
+            else
+                return new Error('Wrong name or password')
         }
         else if (ip.startsWith(subnet)) {
             // Try using IP-address if no name and password
-            return knex.query({u: 'user', p: '_profile_device'})
+            const user = await knex
+                .query({u: 'user', p: '_profile_device'})
                 .select<User>('u.*')
                 .join('_profile_device', 'u.id', '=', 'p.user_id')
                 .where('p.ip', ip)
                 .first()
-                .then(
-                (user) => {
-                    console.log(user, "def")
-                    callback(user)
-                },
-                (err) => {
-                    console.log(err, "gef")
-                    callback(undefined, new Error("Failed to get user by IP."))
-                }
-            )
+
+            return user
         }
-        else
-            return callback(undefined, undefined)
     }
 
-    private decrypt_auth(auth: BasicAuth, callback: (name?: string, password?: string, err?: Error) => void): void {
+    private decrypt_auth(auth: BasicAuth): [name: string, password: string] | Error {
         // decode authentication string
         let data = Buffer.from(auth.slice(6), 'base64').toString('utf-8')
         
         // get name and password
         let [name, password] = data.split(":", 2)
         if (!name || !password) {
-            return callback(undefined, undefined, new Error("Missing name or password"))
+            return new Error("Missing name or password")
         }
     
         // hash password
         password = this.hash_pw(password)
 
-        return callback(name, password)
+        return [name, password]
     }
 
     private hash_pw(password: string): string {

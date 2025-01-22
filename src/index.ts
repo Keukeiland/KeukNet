@@ -41,14 +41,14 @@ if (!await knex.schema.hasTable('db_table_versions')) {
         })
 }
 // get request handler
-let handle = new Handle(modules)
+const handle = new Handle(modules)
 handle.init(modules, knex)
 
 // set up logging
-const log: Log = new Log(config.logging)
+const log = new Log(config.logging)
 
 // handle all requests for both HTTPS and HTTP/2 or HTTP/nginx
-const requestListener = async function (req: Http2ServerRequest, res: Http2ServerResponse) {
+async function requestListener(req: Http2ServerRequest, res: Http2ServerResponse) {
     let ip: Context['ip']
     let cookies: Context['cookies']
     let args: Context['args'] = new Map<string, string>()
@@ -199,8 +199,7 @@ async function startServer(http_enabled: boolean, https_enabled: boolean) {
     if (http_enabled) {
         // Start server
         http1.createServer(
-            // @ts-expect-error
-            https_enabled ? httpsRedirect : requestListener
+            https_enabled ? httpsRedirect : requestListenerCompat
         ).listen(
             config.http_port,
             config.host,

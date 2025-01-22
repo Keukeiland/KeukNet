@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "npx tsc --outDir ./build ./src/index.ts && node build/index.js",
-    "dev": "tsx watch ./src/index.ts"
+    "dev": "tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
   "license": "MPL-2.0",
