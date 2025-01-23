@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "npx tsc --outDir ./build ./src/index.ts && node build/index.js",
+    "start": "tsx src/index.ts",
     "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
