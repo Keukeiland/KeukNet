@@ -1,19 +1,22 @@
 {
   "name": "keuknet",
-  "version": "2.4.1",
+  "version": "3.0.0-beta-1",
   "description": "A webserver and client program for easily managing a WireGuard-network in a client-server setting.",
-  "main": "index.js",
+  "main": "src/index.ts",
+  "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "dev": "sudo npx nodemon index.js -e . --ignore ./data/"
+    "start": "tsx src/index.ts",
+    "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
   "license": "MPL-2.0",
   "dependencies": {
-    "cookie": "^0.6.0",
+    "cookie": "^1.0.2",
     "dotenv": "^16.4.5",
+    "knex": "^3.1.0",
     "nunjucks": "^3.2.4",
-    "sqlite3": "^5.1.6"
+    "sqlite3": "^5.1.6",
+    "typescript": "^5.7.3"
   },
   "repository": {
     "type": "git",
@@ -24,6 +27,10 @@
   },
   "homepage": "https://keuk.net/",
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "@types/cookie": "^0.6.0",
+    "@types/knex": "^0.15.2",
+    "@types/node": "^22.10.7",
+    "@types/nunjucks": "^3.2.6",
+    "tsx": "^4.19.2"
   }
 }
