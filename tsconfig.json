@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "outDir": "./build",
+        "allowJs": true,
+        "target": "ESNext",
+        "moduleResolution": "nodenext",
+        "module": "NodeNext",
+        "diagnostics": true,
+        // "alwaysStrict": true,
+        // "strict": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "strictNullChecks": true,
+        "typeRoots": ["./node_modules/@types", "./types/**/*"],
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+    },
+    "ts-node": {
+        "files": true,
+    },
+    "exclude": ["./build"],
+}
