@@ -1,5 +1,5 @@
 import http2 from 'http2'
-import http1, { IncomingMessage, ServerResponse } from 'http'
+import http1, { IncomingMessage, RequestListener, ServerResponse } from 'http'
 import Knex from 'knex'
 import dotenv from 'dotenv'
 import {cookie, config, Log } from './modules.ts'
@@ -199,7 +199,7 @@ async function startServer(http_enabled: boolean, https_enabled: boolean) {
     if (http_enabled) {
         // Start server
         http1.createServer(
-            https_enabled ? httpsRedirect : requestListenerCompat
+            https_enabled ? httpsRedirect : requestListener as unknown as RequestListener
         ).listen(
             config.http_port,
             config.host,
