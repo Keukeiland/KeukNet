@@ -28,7 +28,7 @@
   "homepage": "https://keuk.net/",
   "devDependencies": {
     "@types/cookie": "^0.6.0",
-    "@types/knex": "^0.15.2",
+    "@types/knex": "^0.16.1",
     "@types/node": "^22.10.7",
     "@types/nunjucks": "^3.2.6",
     "tsx": "^4.19.2"
