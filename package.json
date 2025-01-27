@@ -29,7 +29,7 @@
   "devDependencies": {
     "@types/cookie": "^0.6.0",
     "@types/knex": "^0.15.2",
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.10.10",
     "@types/nunjucks": "^3.2.6",
     "tsx": "^4.19.2"
   }
