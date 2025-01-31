@@ -6,17 +6,17 @@
         <table>
             <tr>
                 <td><label for="username">Name:</label></td>
-                <td><input type="text" name="username" id="username" maxlength="32"></td>
+                <td><input type="text" name="username" id="username" maxlength="32" autocomplete="username"></td>
             </tr>
             <tr>
                 <td><label for="password">Password:</label></td>
-                <td><input type="password" name="password" id="password"></td>
+                <td><input type="password" name="password" id="password" autocomplete="current-password"></td>
             </tr>
             <tr>
                 <td></td>
-                <td>
-                    <input type="submit" value="register" name="register">
+                <td style="display: flex; flex-direction: row-reverse;">
                     <input type="submit" value="log in" name="login">
+                    <input type="submit" value="register" name="register">
                 </td>
             </tr>
         </table>
