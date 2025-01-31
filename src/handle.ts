@@ -1,13 +1,11 @@
 import { load } from "./extman.ts"
 import Log from "./modules/log.ts"
 import { unpack } from "./util.ts"
+import { readdir } from "fs/promises"
 
 let log = new Log(true)
 
 export default class implements Handle {
-    extensions_list = [
-        'profile','nothing','admin','chat'
-    ]
     root: RootExtension
     wg_config: any
     extensions = new Map<string, Extension>()
@@ -24,11 +22,13 @@ export default class implements Handle {
     init: Handle['init'] = async (modules, knex) => {
         this.root = await load(modules, 'root', knex) as RootExtension
     
-        for (const path of this.extensions_list) {
-            try {
-                this.extensions.set(path, await load(modules, path, knex) as Extension)
-            } catch (err: any) {
-                log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
+        for (const path of await readdir(`${import.meta.dirname}/extensions`)) {
+            if (path != 'root') {
+                try {
+                    this.extensions.set(path, await load(modules, path, knex) as Extension)
+                } catch (err: any) {
+                    log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
+                }
             }
         }
         
