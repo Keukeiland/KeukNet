@@ -25,19 +25,18 @@ export default class implements Handle {
         for (const path of await readdir(`${import.meta.dirname}/extensions`)) {
             if (path != 'root') {
                 try {
-                    this.extensions.set(path, await load(modules, path, knex) as Extension)
+                    let extension = await load(modules, path, knex) as Extension
+                    if (extension.admin_only) {
+                        this.admin_extensions.set(extension.name, extension)
+                    }
+                    else {
+                        this.extensions.set(extension.name, extension)
+                    }
                 } catch (err: any) {
                     log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
                 }
             }
         }
-        
-        this.extensions.forEach((extension, name, m) => {
-            if (extension.admin_only) {
-                this.admin_extensions.set(name, extension)
-                this.extensions.delete(name)
-            }
-        })
     }
     
     main: Handle['main'] = async (partial_ctx: PartialContext) => {
@@ -48,7 +47,7 @@ export default class implements Handle {
             ...partial_ctx,
             context: {
                 ...partial_ctx.args,
-                extensions: this.extensions,
+                extensions: new Map(this.extensions),
                 location,
             }
         }
@@ -60,7 +59,7 @@ export default class implements Handle {
         ctx.context.auth_err = err
 
         if (user && user.is_admin)
-            ctx.context.extensions = {...ctx.context.extensions, ...this.admin_extensions}
+            this.admin_extensions.forEach((v, k) => ctx.context.extensions.set(k, v))
     
         // Extension
         const selected_extension = ctx.context.extensions.get(location)
