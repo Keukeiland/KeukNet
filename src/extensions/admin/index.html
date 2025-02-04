@@ -1,5 +1,36 @@
 {% extends "extension.html" %}
 
+{% block head %}
+    <link href="/admin/index.css" rel="stylesheet">
+{% endblock %}
+
+
 {% block body %}
-    <h3>This page is currently under development and will be available soon!</h3>
+<table id="user_table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Registration Date</th>
+            <th>Is Admin</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+            {% for info in user_info %}
+            <tr>
+                <td>{{info.id}}</td>
+                <td>{{info.name}}</td>
+                <td>{{info.registration_date}}</td>
+                <td>{{"Yes" if info.is_admin else "No"}}</td>
+                <td class="actionCells">
+                    <a href="/admin/toggle_admin?id={{info.id}}" class="button">{{"Remove Admin" if info.is_admin else "Make Admin"}}</a>                    
+                    <a href="/admin/remove_account?id={{info.id}}" class="button">Remove Account</a>
+                </td>
+            </tr>
+            {% else %}
+                <p>No users</p>
+            {% endfor %}
+        </tbody>
+</table>
 {% endblock %}
