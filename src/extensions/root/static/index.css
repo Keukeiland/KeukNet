@@ -65,6 +65,7 @@ a:visited {
     text-decoration: none;
     color: black;
     margin-left: 2px;
+    box-sizing: content-box;
 }
 .button:hover {
     background-color: darkgrey;
