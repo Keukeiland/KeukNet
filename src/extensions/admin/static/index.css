@@ -1,0 +1,23 @@
+#user_table{
+    border-collapse: collapse;
+    margin: 10px, 0;
+}
+
+#user_table thead tr{
+    text-align: center;
+    font-weight: bold;
+}
+
+#user_table tbody tr{
+    text-align: center;
+    border-bottom: 1px black;
+}
+
+#user_table tbody tr:nth-of-type(even){
+    background-color: rgb(192, 192, 192);
+}
+
+#user_table th,
+#user_table td{
+    padding: 6px 8px;
+}

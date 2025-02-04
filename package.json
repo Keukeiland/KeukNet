@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
+    "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts",
+    "dev-wsl": "npx tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
   "license": "MPL-2.0",
