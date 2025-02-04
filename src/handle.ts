@@ -1,13 +1,11 @@
 import { load } from "./extman.ts"
 import Log from "./modules/log.ts"
 import { unpack } from "./util.ts"
+import { readdir } from "fs/promises"
 
 let log = new Log(true)
 
 export default class implements Handle {
-    extensions_list = [
-        'profile','nothing','admin','chat'
-    ]
     root: RootExtension
     wg_config: any
     extensions = new Map<string, Extension>()
@@ -24,20 +22,21 @@ export default class implements Handle {
     init: Handle['init'] = async (modules, knex) => {
         this.root = await load(modules, 'root', knex) as RootExtension
     
-        for (const path of this.extensions_list) {
-            try {
-                this.extensions.set(path, await load(modules, path, knex) as Extension)
-            } catch (err: any) {
-                log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
+        for (const path of await readdir(`${import.meta.dirname}/extensions`)) {
+            if (path != 'root') {
+                try {
+                    let extension = await load(modules, path, knex) as Extension
+                    if (extension.admin_only) {
+                        this.admin_extensions.set(extension.name, extension)
+                    }
+                    else {
+                        this.extensions.set(extension.name, extension)
+                    }
+                } catch (err: any) {
+                    log.err(`Unable to load extension '${path}':\n\t${err.message}\n${err.stack}`)
+                }
             }
         }
-        
-        this.extensions.forEach((extension, name, m) => {
-            if (extension.admin_only) {
-                this.admin_extensions.set(name, extension)
-                this.extensions.delete(name)
-            }
-        })
     }
     
     main: Handle['main'] = async (partial_ctx: PartialContext) => {
@@ -48,7 +47,7 @@ export default class implements Handle {
             ...partial_ctx,
             context: {
                 ...partial_ctx.args,
-                extensions: this.extensions,
+                extensions: new Map(this.extensions),
                 location,
             }
         }
@@ -60,7 +59,7 @@ export default class implements Handle {
         ctx.context.auth_err = err
 
         if (user && user.is_admin)
-            ctx.context.extensions = {...ctx.context.extensions, ...this.admin_extensions}
+            this.admin_extensions.forEach((v, k) => ctx.context.extensions.set(k, v))
     
         // Extension
         const selected_extension = ctx.context.extensions.get(location)

@@ -2,62 +2,13 @@
 
 {% block head %}
     <link href="/chat/index.css" rel="stylesheet">
-    <script>
-        window.onload = function() {
-            let send = document.getElementById('sendmessage');
-            send.removeAttribute('action');
-            send.onsubmit = sendMessage;
-
-            var messages = document.getElementById('messages');
-            window.setInterval(refreshChat, 1000);
-        };
-        function sendMessage (e) {
-            e.preventDefault();
-            var msg = e.target.message.value;
-            
-            if (msg !== '') {
-                var http = new XMLHttpRequest();
-                http.open('POST', window.location.href+'/postmessage', true);
-                http.send('message='+encodeURIComponent(e.target.message.value));
-            };
-            e.target.message.value = '';
-        };
-        
-        function refreshChat() {
-            var http = new XMLHttpRequest();
-            http.open('GET', window.location.href+'/getnew', true);
-            http.responseType = 'json';
-            http.onreadystatechange = function() {
-                if (http.readyState == 4 && http.status == 200) {
-                    data = http.response.messages;
-                    for (var i=0; i<data.length; i++) {
-                        var row = messages.insertRow(-1);
-                        row.insertCell(-1).innerHTML = '<img src="{{dicebear_host}}?'+data[i].user.pfp_code+'">';
-                        row.insertCell(-1).appendChild(document.createTextNode(data[i].user.name));
-                        row.insertCell(-1).appendChild(document.createTextNode(data[i].time));
-                        row.insertCell(-1).appendChild(document.createTextNode(data[i].content));
-                    };
-                };
-            };
-            http.send(null);
-        };
-    </script>
+    <script src="/chat/chat.js"></script>
 {% endblock %}
 
 {% block body %}
     <section class="chat">
-        <table id="messages">
-            {% for msg in chat %}
-                <tr>
-                    <td><img src="{{dicebear_host}}?{{msg.user.pfp_code}}"></td>
-                    <td>{{msg.user.name}}</td>
-                    <td>{{msg.time}}</td>
-                    <td>{{msg.content}}</td>
-                </tr>
-            {% else %}
-                <p>No chat items</p>
-            {% endfor %}
-        </table>
+        <table id="messages"></table>
+        
         <form action="/chat" method="POST" enctype="application/x-www-form-urlencoded" id="sendmessage">
             <input type="text" name="message" maxlength="255" autofocus="true">
             <input type="submit" value="Send">
