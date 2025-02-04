@@ -1,0 +1,45 @@
+<section class="topbar">
+    <script>
+        addEventListener('resize', (e) => {
+            let sidebar = document.getElementById("sidebar")
+            let content = document.getElementById("content")
+            if (window.innerWidth >= 550) {
+                content.style.display = "flex"
+                sidebar.style.display = "block"
+            }
+            else {
+                content.style.display = "flex"
+                sidebar.style.display = "none"
+            }
+        })
+        function openSideBar() {
+            let sidebar = document.getElementById("sidebar")
+            let content = document.getElementById("content")
+            if (sidebar.style.display === "flex") {
+                sidebar.style.display = "none"
+                content.style.display = "flex"
+            } else {
+                sidebar.style.display = "flex"
+                content.style.display = "none"
+            }
+        }
+    </script>
+    <a href="javascript:void(0);" class="button" onclick="openSideBar()">≡</a>
+
+    {% for _,ext in extensions %}
+        {% if ext.name == location %}
+            <h3>{{ext.title}}</h3>
+        {% endif %}
+    {% endfor %}
+</section>
+
+<section class="sidebar" id="sidebar">
+    <a href="/" class="{{'selected' if location == ''}} item">
+        <span>Account</span>
+        <img src="{{dicebear_host}}?radius=50&{{user.pfp_code}}" width="25px" height="25px">
+    </a>
+
+    <hr>
+    {% include 'includes/extensions.html' %}
+
+</section>
