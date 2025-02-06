@@ -3,12 +3,12 @@
         addEventListener('resize', (e) => {
             let sidebar = document.getElementById("sidebar")
             let content = document.getElementById("content")
-            if (window.innerWidth >= 550) {
-                content.style.display = "flex"
+            if (window.innerWidth > 550) {
+                content.style.display = ""
                 sidebar.style.display = "block"
             }
             else {
-                content.style.display = "flex"
+                content.style.display = ""
                 sidebar.style.display = "none"
             }
         })
@@ -16,8 +16,8 @@
             let sidebar = document.getElementById("sidebar")
             let content = document.getElementById("content")
             if (sidebar.style.display === "flex") {
-                sidebar.style.display = "none"
-                content.style.display = "flex"
+                sidebar.style.display = ""
+                content.style.display = ""
             } else {
                 sidebar.style.display = "flex"
                 content.style.display = "none"
