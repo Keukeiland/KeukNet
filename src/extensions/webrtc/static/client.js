@@ -11,7 +11,7 @@ let channels = null
 const user_data = {'name': USERNAME, 'style': USERSTYLE}
 
 const sounds = {
-    'join': "join.ogg",
+    'join': "join.mp3",
     'leave': "leave.mp3",
 }
 
@@ -25,19 +25,18 @@ function attachMediaStream(element, stream) {
     element.srcObject = stream
 }
 
-function new_audio(stream) {
-    console.log(stream)
+function new_audio(stream, peer_id) {
     let audio = new Audio()
     audio.autoplay = "autoplay"
     audio.controls = ""
     audio.preload = "none"
     audio.crossOrigin = "anonymous"
-    audio.id = stream.id
+    audio.id = peer_id
     
     document.body.append(audio)
     attachMediaStream(audio, stream)
 
-    peer_media_elements.audio[stream.id] = audio
+    peer_media_elements.audio[peer_id] = audio
     return audio
 }
 
@@ -48,7 +47,7 @@ function remove(id) {
     delete peer_media_elements.channel[id]
 }
 
-function add_channel(audio, stream, name, style) {
+function add_channel(audio, stream, name, style, peer_id) {
     let div = document.createElement('div')
     div.classList = ['channel']
     div.id = name
@@ -70,7 +69,7 @@ function add_channel(audio, stream, name, style) {
     div.append(icon, text, slider)
     channels.append(div)
 
-    peer_media_elements.channel[stream.id] = div
+    peer_media_elements.channel[peer_id] = div
     return [div, slider]
 }
 
@@ -88,7 +87,7 @@ function init() {
 
     set_status("connecting to server")
     console.log("Connecting to signaling server")
-    signaling_socket = io(SIGNALING_SERVER, {transports: ["websocket"]})
+    signaling_socket = io(SIGNALING_SERVER, {transports: ["websocket", "polling"]})
 
     signaling_socket.on('connect', () => {
         set_status("connected to server")
@@ -176,9 +175,8 @@ function init() {
         }
         peer_connection.ontrack = (event) => {
             console.log("ontrack", event)
-            let audio = new_audio(event.streams[0])
-            console.log(audio, peerdata)
-            add_channel(audio, event.streams[0], peerdata.name, peerdata.style)
+            let audio = new_audio(event.streams[0], peer_id)
+            add_channel(audio, event.streams[0], peerdata.name, peerdata.style, peer_id)
             play(sounds.join)
         }
 
@@ -311,8 +309,6 @@ function setup_local_media(callback, errorback) {
             var [div, slider] = add_channel(local_media, stream, USERNAME, USERSTYLE)
             slider.value = 0.0
             local_media.volume = 0.0
-
-            console.log(RTCRtpSender.getCapabilities("audio"))
 
             if (callback) callback()
         })
