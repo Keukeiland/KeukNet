@@ -1,0 +1,49 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <style>
+        video {
+            width:  320px;
+            height:  240px;
+            border:  1px solid black;
+        }
+
+        #channels {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: var(--margin-normal);
+            margin-right: var(--margin-normal);
+        }
+
+        .channel {
+            border: 2px dashed black;
+            width: 150px;
+        }
+        .channel > h3 {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            margin: 0;
+        }
+    </style>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
+    <script>
+        /** CONFIG **/
+        var SIGNALING_SERVER = "https://{{domain}}:{{port}}";
+        var DEFAULT_CHANNEL = 'default';
+        var USERNAME = "{{user.name}}";
+        var USERSTYLE = "{{user.pfp_code}}";
+        var DICEBEAR_HOST = "{{dicebear_host}}";
+    </script>
+    <script src="webrtc/client.js"></script>
+{% endblock %}
+
+{% block body %}
+    <br>
+    <a onclick="join_channel('default')" class="button">Join</a>
+    <a onclick="part_channel('default')" class="button">Leave</a>
+    <p>STATUS:<br><input disabled=true style="width: calc(100% - var(--margin-normal-large));" id="status"></span></p>
+    <p>CHANNEL: <code id="channel_display"></code></p>
+    <div id="channels"></div>
+{% endblock %}
