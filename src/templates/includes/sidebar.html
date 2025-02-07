@@ -3,7 +3,7 @@
         addEventListener('resize', (e) => {
             let sidebar = document.getElementById("sidebar")
             let content = document.getElementById("content")
-            if (window.innerWidth > 550) {
+            if (window.innerWidth >= 550) {
                 content.style.display = ""
                 sidebar.style.display = "block"
             }
