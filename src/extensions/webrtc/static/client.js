@@ -1,14 +1,7 @@
-/* our socket.io connection to our webserver */
-let signaling_socket = null
-/* our own microphone */
-let local_media_stream = null
-/* keep track of our peer connections, indexed by peer_id (aka socket.io id) */
-let peers = {}
-/* keep track of our <audio> tags, indexed by peer_id */
-let peer_media_elements = {'audio': {}, 'channel': {}}
+var local_user = {audio: null, stream: null, con: null}
 
-let channels = null
-const user_data = {'name': USERNAME, 'style': USERSTYLE}
+/** @type {Map<string, RTCPeerConnection>} */
+let peers = new Map()
 
 const sounds = {
     'join': "join.mp3",
@@ -21,10 +14,6 @@ function play(url) {
     new Audio('/webrtc/'+url).play()
 }
 
-function attachMediaStream(element, stream) {
-    element.srcObject = stream
-}
-
 function new_audio(stream, peer_id) {
     let audio = new Audio()
     audio.autoplay = "autoplay"
@@ -34,105 +23,62 @@ function new_audio(stream, peer_id) {
     audio.id = peer_id
     
     document.body.append(audio)
-    attachMediaStream(audio, stream)
+    audio.srcObject = stream
 
-    peer_media_elements.audio[peer_id] = audio
     return audio
 }
 
 function remove(id) {
-    peer_media_elements.audio[id].remove()
-    delete peer_media_elements.audio[id]
-    peer_media_elements.channel[id].remove()
-    delete peer_media_elements.channel[id]
-}
+    const peer = peers.get(id)
+    peer.close()
+    peers.delete(id)
 
-function add_channel(audio, stream, name, style, peer_id) {
-    let div = document.createElement('div')
-    div.classList = ['channel']
-    div.id = name
-
-    let icon = new Image()
-    icon.src = DICEBEAR_HOST + "?" + style
-    let text = document.createElement('h3')
-    text.innerText = name
-    let slider = document.createElement('input')
-    slider.type = 'range'
-    slider.min = 0.0
-    slider.max = 1.0
-    slider.step = 0.01
-    slider.value = 1.0
-    slider.addEventListener('input', (e) => {
-        audio.volume = parseFloat(e.target.value)
-    })
-
-    div.append(icon, text, slider)
-    channels.append(div)
-
-    peer_media_elements.channel[peer_id] = div
-    return [div, slider]
-}
-
-function join_channel(channel) {
-    signaling_socket.emit('join', {'channel': channel, 'userdata': user_data})
-    set_channel(channel)
-}
-function part_channel(channel) {
-    signaling_socket.emit('part', channel)
-    set_channel()
+    peer_audio.get(id).remove()
+    peer_audio.delete(id)
 }
 
 function init() {
-    channels = document.getElementById('channels')
-
     set_status("connecting to server")
     console.log("Connecting to signaling server")
-    signaling_socket = io(SIGNALING_SERVER, {transports: ["websocket", "polling"]})
+    let connection = io(SIGNALING_SERVER, {transports: ["websocket", "polling"]})
+    local_user.con = connection
 
-    signaling_socket.on('connect', () => {
+    connection.on('connect', async () => {
         set_status("connected to server")
         console.log("Connected to signaling server")
-        setup_local_media(() => {
-            set_status("ready to join")
-            set_channel()
-        })
+        await setup_local_media()
+        set_status("ready to join")
+        update_displays()
     })
 
-    signaling_socket.on('disconnect', () => {
+    connection.on('disconnect', () => {
         set_status("disconnected from server")
-        set_channel()
+        update_displays()
         console.log("Disconnected from signaling server")
-        /* Tear down all of our peer connections and remove all the
-            * media divs when we disconnect */
-        for (peer_id in peers) {
-            peers[peer_id].close()
-            remove(peer_id)
-        }
 
-        peers = {}
-        peer_media_elements = {}
+        for (const peer of peers.values()) {
+            remove(peer)
+        }
     })
 
-    signaling_socket.on('connect_error', err => set_status("error whilst connecting to server: "+err.message))
-    signaling_socket.on('connect_failed', err => set_status("failed to connect to server"))
+    connection.on('connect_error', (err) => {
+        set_status("error whilst connecting to server: "+err.message)
+    })
 
+    connection.on('connect_failed', (err) => {
+        set_status("failed to connect to server")
+    })
 
-    /** 
-    * When we join a group, our signaling server will send out 'addPeer' events to each pair
-    * of users in the group (creating a fully-connected graph of users, ie if there are 6 people
-    * in the channel you will connect directly to the other 5, so there will be a total of 15 
-    * connections in the network). 
-    */
-    signaling_socket.on('addPeer', async (config) => {
+    connection.on('addPeer', async (config) => {
         console.log('Signaling server said to add peer:', config)
-        var peer_id = config.peer_id
-        var peerdata = config.userdata
+        const peer_id = config.peer_id
+
         if (peer_id in peers) {
-            /* This could happen if the user joins multiple channels where the other peer is also in. */
             console.log("Already connected to peer ", peer_id)
             return
         }
-        var peer_connection = new RTCPeerConnection({
+
+        const peer_connection = new RTCPeerConnection({
             "optional": [{"DtlsSrtpKeyAgreement": true}],
             iceServers: [
                 {
@@ -160,11 +106,12 @@ function init() {
                 },
             ],
         })
-        peers[peer_id] = peer_connection
+
+        peers.set(peer_id, peer_connection)
 
         peer_connection.onicecandidate = (event) => {
             if (event.candidate) {
-                signaling_socket.emit('relayICECandidate', {
+                connection.emit('relayICECandidate', {
                     'peer_id': peer_id, 
                     'ice_candidate': {
                         'sdpMLineIndex': event.candidate.sdpMLineIndex,
@@ -175,13 +122,14 @@ function init() {
         }
         peer_connection.ontrack = (event) => {
             console.log("ontrack", event)
-            let audio = new_audio(event.streams[0], peer_id)
-            add_channel(audio, event.streams[0], peerdata.name, peerdata.style, peer_id)
+            const audio = new_audio(event.streams[0], peer_id)
+            peer_audio.set(peer_id, audio)
+            update_displays()
             play(sounds.join)
         }
 
         /* Add our local stream */
-        peer_connection.addStream(local_media_stream)
+        peer_connection.addStream(local_user.stream)
 
         /* Only one side of the peer connection should create the
             * offer, the signaling server picks one to be the offerer. 
@@ -190,144 +138,84 @@ function init() {
             */
         if (config.should_create_offer) {
             console.log("Creating RTC offer to ", peer_id)
-            let local_description = await peer_connection.createOffer({offerToReceiveAudio: true})
-            console.log("Local offer description is: ", local_description)
-            peer_connection.setLocalDescription(local_description, () => { 
-                    signaling_socket.emit('relaySessionDescription', 
-                        {'peer_id': peer_id, 'session_description': local_description})
-                    console.log("Offer setLocalDescription succeeded")
-                }, () => {
-                    alert("Offer setLocalDescription failed!")
-                }
-            )
+            const local_description = await peer_connection.createOffer({offerToReceiveAudio: true})
+            await peer_connection.setLocalDescription(local_description).catch(() => {
+                alert("Offer setLocalDescription failed!")
+            })
+            connection.emit('relaySessionDescription', {'peer_id': peer_id, 'session_description': local_description})
+            console.log("Offer setLocalDescription succeeded")
         }
     })
 
+    connection.on('sessionDescription', async (config) => {
+        const peer_id = config.peer_id
+        const peer = peers.get(peer_id)
+        const remote_description = config.session_description
 
-    /** 
-     * Peers exchange session descriptions which contains information
-     * about their audio / video settings and that sort of stuff. First
-     * the 'offerer' sends a description to the 'answerer' (with type
-     * "offer"), then the answerer sends one back (with type "answer").  
-     */
-    signaling_socket.on('sessionDescription', (config) => {
-        console.log('Remote description received: ', config)
-        var peer_id = config.peer_id
-        var peer = peers[peer_id]
-        var remote_description = config.session_description
+        const desc = new RTCSessionDescription(remote_description)
+        await peer.setRemoteDescription(desc).catch((error) => {
+            console.log("setRemoteDescription error: ", error)
+        })
 
-        var desc = new RTCSessionDescription(remote_description)
-        peer.setRemoteDescription(desc, () => {
-                console.log("setRemoteDescription succeeded")
-                if (remote_description.type == "offer") {
-                    console.log("Creating answer")
-                    peer.createAnswer((local_description) => {
-                            console.log("Answer description is: ", local_description)
-                            peer.setLocalDescription(local_description, () => {
-                                    signaling_socket.emit('relaySessionDescription', 
-                                        {'peer_id': peer_id, 'session_description': local_description, 'userdata': {'name': USERNAME, 'style': USERSTYLE}})
-                                    console.log("Answer setLocalDescription succeeded")
-                                }, () => {
-                                    Alert("Answer setLocalDescription failed!")
-                                }
-                            )
-                        }, (error) => {
-                            console.log("Error creating answer: ", error)
-                            console.log(peer)
-                        }
-                    )
-                }
-            }, (error) => {
-                console.log("setRemoteDescription error: ", error)
-            }
-        )
-        console.log("Description Object: ", desc)
+        console.log("setRemoteDescription succeeded")
+        if (remote_description.type == "offer") {
+            console.log("Creating answer")
+            const local_description = await peer.createAnswer().catch((error) => {
+                console.log("Error creating answer: ", error)
+            })
+
+            await peer.setLocalDescription(local_description).catch(() => {
+                Alert("Answer setLocalDescription failed!")
+            })
+
+            connection.emit('relaySessionDescription', {'peer_id': peer_id, 'session_description': local_description})
+            console.log("Answer setLocalDescription succeeded")
+        }
     })
 
-    /**
-     * The offerer will send a number of ICE Candidate blobs to the answerer so they 
-     * can begin trying to find the best path to one another on the net.
-     */
-    signaling_socket.on('iceCandidate', (config) => {
-        var peer = peers[config.peer_id]
-        var ice_candidate = config.ice_candidate
+    connection.on('iceCandidate', (config) => {
+        const peer = peers.get(config.peer_id)
+        const ice_candidate = config.ice_candidate
         peer.addIceCandidate(new RTCIceCandidate(ice_candidate))
     })
 
-
-    /**
-     * When a user leaves a channel (or is disconnected from the
-     * signaling server) everyone will recieve a 'removePeer' message
-     * telling them to trash the media channels they have open for
-     * that peer. If it was this client that left a channel, they'll also
-     * receive the removePeers. If this client was disconnected, they
-     * wont receive removePeers, but rather the
-     * signaling_socket.on('disconnect') code will kick in and tear down
-     * all the peer sessions.
-     */
-    signaling_socket.on('removePeer', (config) => {
+    connection.on('removePeer', (config) => {
         console.log('Signaling server said to remove peer:', config)
-        var peer_id = config.peer_id
-        if (peer_id in peers) {
+        const peer_id = config.peer_id
+        if (peers.has(peer_id)) {
             remove(peer_id)
-            peers[peer_id].close()
         }
-
-        delete peers[peer_id]
         play(sounds.leave)
     })
 }
 
-
-
-
-/***********************/
-/** Local media stuff **/
-/***********************/
-function setup_local_media(callback, errorback) {
-    if (local_media_stream != null) {  /* ie, if we've already been initialized */
-        if (callback) callback()
+async function setup_local_media() {
+    if (local_user.stream != null)
         return
-    }
-    /* Ask user for permission to use the computers microphone, 
-        * attach it to an <audio> tag if they give us access. */
+
     set_status("Obtaining microphone access")
     console.log("Requesting access to local audio inputs")
-
 
     navigator.getUserMedia = ( navigator.getUserMedia ||
             navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia ||
             navigator.msGetUserMedia)
 
-    navigator.mediaDevices.getUserMedia({"audio":true})
-        .then((stream) => { /* user accepted access to microphone */
-            set_status("successfully obtained microphone access")
-            console.log("Access granted to audio")
-            local_media_stream = stream
-            var local_media = new_audio(stream)
-            var [div, slider] = add_channel(local_media, stream, USERNAME, USERSTYLE)
-            slider.value = 0.0
-            local_media.volume = 0.0
+    const stream = await navigator.mediaDevices.getUserMedia({"audio":true}).catch((err) => {
+        /* user denied access to microphone */
+        set_status("failed to obtain microphone access")
+        throw Error(`Access denied for audio: ${err}`)
+    })
 
-            if (callback) callback()
-        })
-        .catch((err) => { /* user denied access to microphone */
-            console.error(err)
-            set_status("failed to obtain microphone access")
-            console.log("Access denied for audio")
-            if (errorback) errorback()
-        })
+    /* user accepted access to microphone */
+    set_status("successfully obtained microphone access")
+    console.log("Access granted to audio")
+    local_user.stream = stream
+    local_user.audio = new_audio(stream)
+    local_user.audio.volume = 0.0
+    peer_audio.set('local', local_user.audio)
 }
 
 function set_status(text) {
     document.getElementById('status').value = text
-}
-function set_channel(channel) {
-    if (!(channel===undefined)) {
-        document.getElementById('channel_display').innerText = channel
-    }
-    else {
-        document.getElementById('channel_display').innerText = 'none yet'
-    }
 }
