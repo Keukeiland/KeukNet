@@ -14,7 +14,7 @@ export default class extends ExtensionBase {
         async push(ctx: Context, content: string, knex : Knex){
             const message: message = {
                 name: ctx.context.user?.name,
-                pfp_code: `${ctx.context.dicebear_host}?${ctx.context.user?.pfp_code}`,
+                pfp_code: ctx.context.user?.pfp_code,
                 created_at: (new Date()).toLocaleTimeString('en-US', {hour12: false}),
                 content,
             }
