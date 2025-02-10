@@ -1,0 +1,30 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/invite/index.css" rel="stylesheet">
+{% endblock %}
+
+
+{% block body %}
+<table id="invite_table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Link</th>
+            <th>Created at</th>
+            <th>Used</th>
+        </tr>
+    </thead>
+    <tbody>
+            {% for link in invite_links %}
+            <tr class={{"used" if link.used else " "}}>
+                <td>{{link.id}}</td>
+                <td>{{link.link}}</td>
+                <td>{{link.created_at}}</td>
+                <td>{{"Yes" if link.used else "No"}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+</table>
+<a href="/invite/create" class="button">Create Invite</a>
+{% endblock %}
