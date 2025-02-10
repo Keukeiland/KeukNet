@@ -11,7 +11,7 @@ table th, td{
 }
 
 .used{
-    color: rgb(165, 165, 165);
+    color: #a5a5a5;
     font-style: italic;
     font-weight: lighter;
 }

@@ -14,7 +14,8 @@ export default class extends Tables {
                 await knex.schema()
                     .createTable('_message', (table) => {
                         table.increments('id').primary()
-                        table.string('user_id').notNullable()
+                        table.integer('user_id').notNullable()
+                        table.foreign('user_id', 'fk_user_id').references('_root_user.id')
                         table.timestamp('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
                         table.string('content').notNullable()
                     })
