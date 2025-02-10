@@ -3,20 +3,20 @@ import { Knex } from '../../modules.ts'
 
 export default class extends Tables {
     override versions(versions: VersionMap) {
-        versions.set('message', 0)
+        versions.set('invite', 0)
 
         return versions
     }
 
     override migrations(knex: Knex, migrations: MigrationMap) {
-        migrations.set('message', {
+        migrations.set('invite', {
             0: async ()=>{
                 await knex.schema()
-                    .createTable('_message', (table) => {
+                    .createTable('_invite', (table) => {
                         table.increments('id').primary()
-                        table.string('user_id').notNullable()
+                        table.string('link').notNullable()
                         table.timestamp('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
-                        table.string('content').notNullable()
+                        table.boolean('used').notNullable().defaultTo(false)
                     })
             },
         })
