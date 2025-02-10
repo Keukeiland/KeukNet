@@ -26,6 +26,9 @@ export default class implements Handle {
             if (path != 'root') {
                 try {
                     let extension = await load(modules, path, knex) as Extension
+                    if (extension == null) {
+                        continue
+                    }
                     if (extension.admin_only) {
                         this.admin_extensions.set(extension.name, extension)
                     }
