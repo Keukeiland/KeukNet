@@ -31,11 +31,11 @@ function addMessage(msg) {
     }
     const row = messages.insertRow(-1)
     const img_col = row.insertCell(-1)
-    img_col.innerHTML = '<img src="'+msg.user.pfp_code+'" class="pfp">'
+    img_col.innerHTML = '<img src="'+msg.pfp_code+'" class="pfp">'
     const col = row.insertCell(-1)
     const info_col = col.appendChild(document.createElement('div'))
-    info_col.appendChild(field(msg.user.name))
-    info_col.appendChild(field(msg.time))
+    info_col.appendChild(field(msg.name))
+    info_col.appendChild(field(msg.created_at))
     const msg_col = col.appendChild(document.createElement('div'))
     msg_col.appendChild(field(msg.content))
 }

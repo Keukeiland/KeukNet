@@ -1,50 +1,56 @@
-import { ExtensionBase } from "../../modules.ts"
+import { ExtensionBase, Knex } from "../../modules.ts"
+import { unpack } from "../../util.ts"
 
-type message = {user: {name: any, pfp_code: any}, time: any, content: any}
+type message = {name: any, pfp_code: any, created_at: any, content: any}
 
 export default class extends ExtensionBase {
     override name = 'chat'
     override title = 'Chat'
+    override tables = true
 
     private MessageStore = class {
-        messages: message[] = [{
-            user: {name:'SYSTEM',pfp_code:'seed=SYSTEM'},
-            time:(new Date()).toLocaleTimeString('en-US', {hour12: false}),
-            content: 'Welcome to the chatroom!'
-        }]
         onPushListeners: Set<(msg: message) => void> = new Set()
     
-        push(ctx: Context, content: string) {
+        async push(ctx: Context, content: string, knex : Knex){
             const message: message = {
-                user: {
-                    name: ctx.context.user?.name,
-                    pfp_code: `${ctx.context.dicebear_host}?${ctx.context.user?.pfp_code}`,
-                },
-                time: (new Date()).toLocaleTimeString('en-US', {hour12: false}),
+                name: ctx.context.user?.name,
+                pfp_code: `${ctx.context.dicebear_host}?${ctx.context.user?.pfp_code}`,
+                created_at: (new Date()).toLocaleTimeString('en-US', {hour12: false}),
                 content,
             }
-            this.messages.push(message)
+            let userID = Number(ctx.context.user?.id)
+            await knex.query('_message')
+            // @ts-expect-error
+            .insert({user_id: userID, created_at: message.created_at, content: message.content})
+
             this.onPushListeners.forEach((listener) => listener(message))
         }
     }
     message_store = new this.MessageStore()
 
-    override handle: Extension['handle'] = (ctx) => {
+    override handle: Extension['handle'] = async (ctx) => {
         const location = ctx.path.shift()
+        let [knex]: [Knex] = this.get_dependencies('Knex')
 
         switch (location) {
             case '':
             case undefined: {
                 if (ctx.data && ctx.data.form.message) {
                     const message = ctx.data.form.message.substring(0,255)
-                    this.message_store.push(ctx, message)
+                    this.message_store.push(ctx, message, knex)
                 }
-                ctx.context.chat = this.message_store.messages
                 return this.return_html(ctx, 'index')
             }
             case 'history': {
                 // Should at some point return history by request
-                return this.return_data(ctx, JSON.stringify({messages: this.message_store.messages}))
+
+                let [message_list, err] = await knex
+                    .query('_message')
+                    .select<message[]>('_message.created_at', '_message.content', 'user.name', 'user.pfp_code')
+                    .join('user', '_message.user_id', '=', 'user.id')
+                    .then(unpack<message[]>)
+                
+                return this.return_data(ctx, JSON.stringify({messages: message_list}))
             }
             case 'new_message_event': {
                 const {req, res} = ctx
