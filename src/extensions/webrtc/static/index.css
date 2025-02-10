@@ -1,0 +1,44 @@
+#channels {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: var(--margin-normal);
+    margin-right: var(--margin-normal);
+    gap: 10px;
+}
+.channel {
+    border: 1px dashed black;
+    flex-grow: 1;
+    width: 49.2%;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    padding-bottom: 6px;
+}
+.channel > :first-child {
+    flex-grow: 1;
+    text-align: center;
+    line-height: 32px;
+}
+.channel .users {
+    width: 100%;
+}
+.channel .users .user {
+    display: flex;
+    flex-wrap: nowrap;
+    border-top: solid 1px black;
+}
+.channel .users .user > :nth-child(1) {
+    width: 32px;
+    height: 32px;
+}
+.channel .users .user > :nth-child(2) {
+    flex-grow: 1;
+    margin: 0;
+    margin-left: 10px;
+    line-height: 32px;
+}
+.channel .users .user > :nth-child(3) {
+    max-width: 100px;
+    margin: 0;
+    margin-left: 10px;
+}

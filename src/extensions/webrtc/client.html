@@ -1,0 +1,28 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/webrtc/index.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
+    <script>
+        /** CONFIG **/
+        var SIGNALING_SERVER = "https://{{domain}}:{{port}}"
+        var USERNAME = "{{user.name}}"
+        var USERSTYLE = "{{user.pfp_code}}"
+        var DICEBEAR_HOST = "{{dicebear_host}}"
+        var CHANNEL_USERS_STUFF = {{channel_users | dump | safe}}
+    </script>
+    <script src="webrtc/mediator.js"></script>
+    <script src="webrtc/client.js"></script>
+    <script src="webrtc/display.js"></script>
+{% endblock %}
+
+{% block body %}
+    <p>STATUS:<br><input disabled=true style="width: calc(100% - var(--margin-normal));" id="status"></span></p>
+    <p>CHANNEL: <code id="channel_display"></code></p>
+    <br>
+    <div id="channels">
+        {% for channel in channels %}
+            <div id="channel-{{channel}}" class="channel"></div>
+        {% endfor %}
+    </div>
+{% endblock %}

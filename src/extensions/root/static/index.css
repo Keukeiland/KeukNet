@@ -65,6 +65,7 @@ a:visited {
     text-decoration: none;
     color: black;
     margin-left: 2px;
+    box-sizing: content-box;
 }
 .button:hover {
     background-color: darkgrey;
@@ -162,6 +163,9 @@ a:visited {
     height: 30px;
     font-size: large;
     margin-left: var(--margin-normal-large);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
 }
 
 .content {
@@ -208,7 +212,7 @@ a:visited {
         height: calc(100% - 60px);
         top: 60px;
         padding: var(--margin-normal) var(--margin-normal);
-        overflow-y: scroll;
+        overflow-y: auto;
     }
     .sidebar > :nth-child(1) img {
         height: var(--margin-normal-large);
