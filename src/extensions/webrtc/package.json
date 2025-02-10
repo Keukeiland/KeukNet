@@ -1,11 +1,7 @@
 {
   "name": "webrtc",
   "version": "0.0.1",
-  "description": "",
   "type": "module",
-  "scripts": {
-    "start": "node server"
-  },
   "dependencies": {
     "socket.io": "4.7.5"
   }
