@@ -31,7 +31,7 @@ function addMessage(msg) {
     }
     const row = messages.insertRow(-1)
     const img_col = row.insertCell(-1)
-    img_col.innerHTML = '<img src="'+msg.pfp_code+'" class="pfp">'
+    img_col.innerHTML = `<img src="${dicebear_host}?${msg.pfp_code}" class="pfp">`
     const col = row.insertCell(-1)
     const info_col = col.appendChild(document.createElement('div'))
     info_col.appendChild(field(msg.name))
