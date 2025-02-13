@@ -1,8 +1,8 @@
 {
-  "name": "webrtc",
+  "name": "minecraft",
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "socket.io": "4.7.5"
+    "rcon-srcds": "2.1.0"
   }
 }

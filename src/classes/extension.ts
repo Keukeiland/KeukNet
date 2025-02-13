@@ -5,6 +5,7 @@ import { unpack } from "../util.ts"
 export abstract class ExtensionBase implements Extension {
     admin_only = false
     tables = false
+    disabled = false
     initialized_deps: DependencyMap = new DependencyMapImpl()
     name: Extension['name'] = "default_name"
     title: Extension['title'] = "Default Title"

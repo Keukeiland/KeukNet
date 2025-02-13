@@ -6,6 +6,7 @@ export default class extends ExtensionBase {
     override name = 'profile'
     override title = 'Network'
     override tables = true
+    override disabled = true
     wg: any = null
     wg_config: any = null
 
