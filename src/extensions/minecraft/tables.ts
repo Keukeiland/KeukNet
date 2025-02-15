@@ -3,26 +3,21 @@ import { Knex } from '../../modules.ts'
 
 export default class extends Tables {
     override versions(versions: VersionMap) {
-        versions.set('invite', 0)
+        versions.set('minecraft', 0)
 
         return versions
     }
 
     override migrations(knex: Knex, migrations: MigrationMap) {
-        migrations.set('invite', {
+        migrations.set('minecraft', {
             0: async ()=>{
                 await knex.schema()
-                    .createTable('_invite', (table) => {
+                    .createTable('_minecraft', (table) => {
                         table.increments('id').primary()
-                        table.string('code').notNullable()
-                        table.datetime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
-                        table.boolean('used').notNullable().defaultTo(false)
+                        table.string('minecraft_name').notNullable()
                         table.integer('user_id')
                         table.foreign('user_id', 'fk_user_id').references('_root_user.id')
                     })
-                await knex.query('_invite')
-                    // @ts-expect-error
-                    .insert({code: 'admin'})
             },
         })
 

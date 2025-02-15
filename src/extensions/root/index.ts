@@ -68,28 +68,6 @@ export default class extends ExtensionBase implements RootExtension {
                                 "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
                             })
                         }
-                        // Register
-                        else if (form.register) {
-                            if (form.username && form.password) {
-                                form.username = form.username.substring(0, 32)
-                                this.addUser(form.username, form.password, (err?: Error) => {
-                                    // if invalid credentials
-                                    if (err) {
-                                        ctx.context.auth_err = err
-                                        return this.return_html(ctx, 'login')
-                                    }
-                                    // success
-                                    else {
-                                        let auth = Buffer.from(form.username+":"+form.password).toString('base64')
-                                        return this.return_html(ctx, 'login', undefined, 500, 303, {
-                                            "Location": "/",
-                                            "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
-                                        })
-                                    }
-                                })
-                            }
-                            return
-                        }
                     }
                     // First load
                     return this.return_html(ctx, 'login', undefined, 500, 200, {
