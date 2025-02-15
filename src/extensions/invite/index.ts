@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { ExtensionBase, Knex } from '../../modules.ts'
 import { unpack } from '../../util.ts'
+import minecraft from '../minecraft/index.ts'
 
 export default class extends ExtensionBase {
     override name = 'invite'
@@ -80,7 +81,7 @@ export default class extends ExtensionBase {
             case 'create_acc':{
                 if (ctx.data)
                 {
-                    let form: {invite_code?: string, username?: string, password?: string} = ctx.data.form
+                    let form: {invite_code?: string, username?: string, password?: string, minecraft_name?: string} = ctx.data.form
                     if (form.username && form.password && form.invite_code) {
                         form.username = form.username.substring(0, 32)
                         
@@ -102,6 +103,14 @@ export default class extends ExtensionBase {
                                 })
                                 .where('code', form.invite_code)
                                 .then()
+                                if (form.minecraft_name)//If a minecraft name was entered
+                                {
+                                    await knex
+                                    .query('_minecraft_minecraft')
+                                    // @ts-expect-error
+                                    .insert({minecraft_name: form.minecraft_name, user_id: id})
+                                }
+
                                 return this.return_html(ctx, 'login', undefined, 500, 303, {
                                     "Location": "/",
                                     "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
