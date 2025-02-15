@@ -154,13 +154,16 @@ export abstract class ExtensionBase implements Extension {
                 key,
                 value, {
                     secure: true,
-                    httpOnly: true
+                    httpOnly: true,
+                    path: '/'
                 }
             )
         else
             return cookie.serialize(
                 key,
-                value
+                value, {
+                    path: '/'
+                }
             )
     }
 

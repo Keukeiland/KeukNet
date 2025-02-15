@@ -10,7 +10,7 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Link</th>
+            <th>Code</th>
             <th>Created at</th>
             <th>Used</th>
         </tr>
@@ -19,7 +19,7 @@
             {% for link in invite_links %}
             <tr class={{"used" if link.used else " "}}>
                 <td>{{link.id}}</td>
-                <td>{{link.link}}</td>
+                <td>{{link.code}}</td>
                 <td>{{link.created_at}}</td>
                 <td>{{"Yes" if link.used else "No"}}</td>
             </tr>

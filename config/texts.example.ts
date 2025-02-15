@@ -9,6 +9,6 @@ export default {
             Please do be aware of the fact that this is still very much in development and a lot of stuff will be improved with time.
         </p>
 
-        <a href="/login" class="button">Register / Login</a>
+        <a href="/login" class="button">Login</a>
         `,
 }
