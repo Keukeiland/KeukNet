@@ -1,17 +1,19 @@
 {% extends "layout.html" %}
 
 {% block head %}
-    <link href="/invite/index.css" rel="stylesheet">
+    <link href="/invite/register.css" rel="stylesheet">
 {% endblock %}
 
 
 {% block body %}
-<form action="/invite/create_acc" method="post" enctype="application/x-www-form-urlencoded">
+<h3>Registration</h3>
+<div>
+    <form action="/invite/create_acc" method="post" enctype="application/x-www-form-urlencoded">
     <input type="text" name="invite_code" hidden="true" value="{{invite_code}}">
     <table>
         <tr>
             <td><label for="username">Name:</label></td>
-            <td><input type="text" name="username" id="username" maxlength="32" autocomplete="username"></td>
+            <td><input type="text" name="username" id="username" maxlength="32" autocomplete="username" autofocus="true"></td>
         </tr>
         <tr>
             <td><label for="password">Password:</label></td>
@@ -20,15 +22,15 @@
         <tr>
             <td><label for="username">Minecraft Username:</label></td>
             <td><input type="text" name="minecraft_name" id="minecraft_name" maxlength="32" value="{{minecraft_username}}"></td>
-            <td><label>(Only if you want to play on the minecraft server)</label></td>
+            <td><sub>(optional)</sub></td>
         </tr>
         <tr>
             <td></td>
-            <td style="display: flex; flex-direction: row-reverse;">
-                <input type="submit" value="register" name="register">
-            </td>
+            <td><input type="submit" value="register" name="register" class="form-button"></td>
+            <td></td>
         </tr>
     </table>
     <span id="error" style="color: red;">{{auth_err}}</span>
 </form>
+</div>
 {% endblock %}
