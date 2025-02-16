@@ -73,7 +73,9 @@ export default class extends ExtensionBase {
         const [raw_names, err] = await knex
             .query('_minecraft')
             .select('minecraft_name')
-            .then(unpack<{minecraft_name: string}[]>)
+            .then(unpack<{minecraft_name: string}[]>, unpack<undefined>)
+        if (err)
+            return
         const names: string[] = (raw_names ?? [])
             // Unpack objects
             .flatMap((name) => name.minecraft_name)
