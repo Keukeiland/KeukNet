@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "rcon-srcds": "2.1.0"
+    "rcon-client": "^4.2.5"
   }
 }

@@ -7,6 +7,7 @@ export default class extends ExtensionBase {
     override name = 'invite'
     override title = 'Invite'
     override tables = true
+    override hidden = true
 
     salt: string
 
@@ -109,6 +110,8 @@ export default class extends ExtensionBase {
                                     .query('_minecraft_minecraft')
                                     // @ts-expect-error
                                     .insert({minecraft_name: form.minecraft_name, user_id: id})
+                                    
+                                    ;(ctx.context.extensions.get('minecraft') as any)?.update_whitelist()
                                 }
 
                                 return this.return_html(ctx, 'login', undefined, 500, 303, {
