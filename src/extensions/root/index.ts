@@ -162,17 +162,17 @@ export default class extends ExtensionBase implements RootExtension {
             else
                 return new Error('Wrong name or password')
         }
-        else if (ip.startsWith(subnet)) {
-            // Try using IP-address if no name and password
-            const user = await knex
-                .query({u: 'user', p: '_profile_device'})
-                .select<User>('u.*')
-                .join('_profile_device', 'u.id', '=', 'p.user_id')
-                .where('p.ip', ip)
-                .first()
+        // else if (ip.startsWith(subnet)) {
+        //     // Try using IP-address if no name and password
+        //     const user = await knex
+        //         .query({u: 'user', p: '_profile_device'})
+        //         .select<User>('u.*')
+        //         .join('_profile_device', 'u.id', '=', 'p.user_id')
+        //         .where('p.ip', ip)
+        //         .first()
 
-            return user
-        }
+        //     return user
+        // }
     }
 
     private decrypt_auth(auth: BasicAuth): [name: string, password: string] | Error {
