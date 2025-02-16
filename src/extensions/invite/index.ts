@@ -7,6 +7,7 @@ export default class extends ExtensionBase {
     override name = 'invite'
     override title = 'Invite'
     override tables = true
+    override hidden = true
 
     salt: string
 
