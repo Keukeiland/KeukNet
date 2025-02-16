@@ -64,7 +64,8 @@ export default class extends ExtensionBase {
                 }
 
                 return this.return(ctx, undefined, location='/minecraft')
-            }default: {
+            }
+            default: {
                 return this.return_file(ctx, location)
             }
         }
