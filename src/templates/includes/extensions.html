@@ -1,6 +1,8 @@
 <section class="extensions">
     {% for _,ext in extensions %}
-        <a href="/{{ext.name}}" class="{{'selected' if ext.name == location}} item">{{ext.title}}</a>
+        {% if not ext.hidden %}
+            <a href="/{{ext.name}}" class="{{'selected' if ext.name == location}} item">{{ext.title}}</a>
+        {% endif %}
     {% endfor %}
 
 </section>
