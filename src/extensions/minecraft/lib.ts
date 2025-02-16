@@ -15,11 +15,11 @@ export const raw = rcon
 
 export const send = async (command: string) => {
     await connected()
-    return rcon.send(command)
+    return rcon.send(command).catch(() => '')
 }
 export const sendRaw = async (buffer: Buffer) => {
     await connected()
-    return rcon.sendRaw(buffer)
+    return rcon.sendRaw(buffer).catch(() => '')
 }
 
 export const connected = async (): Promise<void> => new Promise((resolve) => {

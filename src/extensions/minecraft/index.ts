@@ -83,10 +83,15 @@ export default class extends ExtensionBase {
             .filter((name) => name != '')
 
         const currently_whitelisted_raw = await rcon.send("whitelist list")
-        const currently_whitelisted: string[] = currently_whitelisted_raw
+        const currently_whitelisted = currently_whitelisted_raw
             .split(' ')
             // Remove trash
             .slice(5)
+            .flatMap((name) => {
+                if (name.endsWith(','))
+                    return name.substring(0, name.length -1)
+                return name
+            })
 
         const to_remove = currently_whitelisted.filter((name) => !names.includes(name))
         const to_add = names.filter((name) => !currently_whitelisted.includes(name))
