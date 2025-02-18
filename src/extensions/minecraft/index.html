@@ -1,14 +1,19 @@
 {% extends "extension.html" %}
 
+{% block head %}
+    <link href="/minecraft/index.css" rel="stylesheet">
+{% endblock %}
+
 {% block body %}
+
 <form action="/minecraft/change" method="post" enctype="application/x-www-form-urlencoded">
     <table>
         <tr>
             <td><label for="username">Minecraft Username:</label></td>
             <td><input type="text" name="minecraft_name" id="minecraft_name" maxlength="32" value="{{minecraft_username}}"></td>
+            <td><input type="submit" value="Change" name="change" class="form-button"></td>
         </tr>
     </table>
-    <input type="submit" value="Change" name="change">
     <span id="error" style="color: red;">{{auth_err}}</span>
 </form>
 

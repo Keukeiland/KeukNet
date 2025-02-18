@@ -17,13 +17,13 @@ export default class extends ExtensionBase {
     }
 
     override requires_admin: Extension['requires_admin'] = (path) => {
-        if (['register', 'create_acc'].includes(path.at(0)??'')) {
+        if (['register', 'create_acc', 'register.css'].includes(path.at(0)??'')) {
             return false
         }
         return true
     }
     override requires_login: Extension['requires_login'] = (path) => {
-        if (['register', 'create_acc'].includes(path.at(0)??'')) {
+        if (['register', 'create_acc', 'register.css'].includes(path.at(0)??'')) {
             return false
         }
         return true
@@ -32,7 +32,7 @@ export default class extends ExtensionBase {
     override handle: Extension['handle'] = async (ctx) => {
         let [knex]: [Knex] = this.get_dependencies('Knex')
         let location = ctx.path.shift()
-
+        
         switch (location) {
             case '':
             case undefined:{
