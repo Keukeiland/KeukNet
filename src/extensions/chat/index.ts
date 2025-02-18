@@ -58,6 +58,7 @@ export default class extends ExtensionBase {
                 res.writeHead(200, {
                     'Content-Type': 'text/event-stream',
                     'Cache-Control': 'no-cache',
+                    'X-Accel-Buffering': 'no',
                 });
                 
                 let counter = 0;
