@@ -63,15 +63,8 @@ export default class extends ExtensionBase {
                 const invite_code = ctx.args.get('code')
                 if (!invite_code)
                     return
-                
-                let [invite, err] = await knex
-                .query('_invite')
-                .select<any>('used')
-                .where('code', invite_code)
-                .first()
-                .then(unpack<any>)
 
-                if (!err && !invite?.used){
+                if (await this.inviteCodeValid(invite_code)){
                     ctx.context.invite_code = invite_code
                     return this.return_html(ctx, 'register', undefined, 500, 200, {
                         "Set-Cookie": this.del_cookie('auth')
@@ -83,7 +76,8 @@ export default class extends ExtensionBase {
                 if (ctx.data)
                 {
                     let form: {invite_code?: string, username?: string, password?: string, minecraft_name?: string} = ctx.data.form
-                    if (form.username && form.password && form.invite_code) {
+                    const valid_invite_code = await this.inviteCodeValid(form.invite_code)
+                    if (form.username && form.password && valid_invite_code) {
                         form.username = form.username.substring(0, 32)
                         
                         this.addUser(form.username, form.password, async (id?: number, err?: Error) => {
@@ -149,6 +143,24 @@ export default class extends ExtensionBase {
                 .insert({name, password, pfp_code: `seed=${name}`})
                 .then((id) => callback(id[0] as unknown as number), (err) => callback(undefined, err))
         })
+    }
+
+    async inviteCodeValid(code?: string): Promise<boolean>{
+        if (code === undefined)
+            return false
+        let [knex]: [Knex] = this.get_dependencies('Knex')
+
+        let [invite, err] = await knex
+            .query('_invite')
+            .select<any>('used')
+            .where('code', code)
+            .first()
+            .then(unpack<any>)
+        
+        if (!err && !invite?.used)
+            return true
+        else
+            return false
     }
 
     private exists(name: User['name'], callback: (exists: boolean, err?: Error) => void): void {
