@@ -1,7 +1,7 @@
 
 table {
-    margin: 2%;
-    padding-bottom: 5%;
+    margin: var(--margin-normal);
+    padding-bottom: 10px;
     text-align: center;
     font-size: smaller;
 }
@@ -15,4 +15,10 @@ table th, td{
     color: #a5a5a5;
     font-style: italic;
     font-weight: lighter;
+}
+
+@media (max-width: 550px) {
+    table {
+        margin: var(--margin-normal) auto;
+    }
 }

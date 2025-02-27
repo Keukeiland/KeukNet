@@ -3,7 +3,7 @@ import { Knex } from '../../modules.ts'
 
 export default class extends Tables {
     override versions(versions: VersionMap) {
-        versions.set('invite', 0)
+        versions.set('invite', 1)
 
         return versions
     }
@@ -23,6 +23,19 @@ export default class extends Tables {
                 await knex.query('_invite')
                     // @ts-expect-error
                     .insert({code: 'admin'})
+            },
+            1: async ()=>{
+                await knex.schema()
+                    .alterTable('_invite', (table) => {
+                        table.integer('created_by')
+                        
+                        //foreign key?
+                    })
+
+                    await knex.query('_invite')
+                    .select('*')
+                    // @ts-expect-error
+                    .update({created_by: 1})
             },
         })
 
