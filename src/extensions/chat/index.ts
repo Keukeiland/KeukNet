@@ -15,7 +15,8 @@ export default class extends ExtensionBase {
             const message: message = {
                 name: ctx.context.user?.name,
                 pfp_code: ctx.context.user?.pfp_code,
-                created_at: (new Date()).toLocaleTimeString('en-US', {hour12: false}),
+                //created_at: (new Date()).toLocaleTimeString('en-US', {hour12: false}),
+                created_at: (Date.now()),
                 content,
             }
             let userID = Number(ctx.context.user?.id)
