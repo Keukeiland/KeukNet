@@ -1,0 +1,8 @@
+{
+  "name": "matrix",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "matrix-js-sdk": "^36.2.0"
+  }
+}
