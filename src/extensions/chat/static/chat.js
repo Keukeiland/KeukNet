@@ -30,10 +30,9 @@ function addMessage(msg) {
         f.textContent = c
         return f
     }
-    console.log('addMessage')
 
     const messageDate = new Date(msg.created_at); // Convert UNIX timestamp to Date
-    const messageDay = messageDate.toLocaleDateString("sv-SE")
+    const messageDay = messageDate.toISOString().split('T', 1).at(0)
 
     //ADD DAY SEPARATOR
     if (messageDay !== lastMessageDate) {

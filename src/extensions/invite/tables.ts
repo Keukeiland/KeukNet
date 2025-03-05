@@ -28,12 +28,10 @@ export default class extends Tables {
                 await knex.schema()
                     .alterTable('_invite', (table) => {
                         table.integer('created_by')
-                        
-                        //foreign key?
+                        table.foreign('created_by', 'fk_user_id').references('_root_user.id')
                     })
 
                     await knex.query('_invite')
-                    .select('*')
                     // @ts-expect-error
                     .update({created_by: 1})
             },
