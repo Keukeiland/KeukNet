@@ -3,7 +3,7 @@ import { Knex } from '../../modules.ts'
 
 export default class extends Tables {
     override versions(versions: VersionMap) {
-        versions.set('invite', 1)
+        versions.set('invite', 0)
 
         return versions
     }
@@ -18,25 +18,15 @@ export default class extends Tables {
                         table.datetime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
                         table.boolean('used').notNullable().defaultTo(false)
                         table.integer('user_id')
-                        table.foreign('user_id', 'fk_user_id').references('_root_user.id')
+                        table.foreign('user_id', 'fk_user_id').references('user.id')
+                        table.integer('created_by')
+                        table.foreign('created_by', 'fk_user_id').references('user.id')
                     })
                 await knex.query('_invite')
                     // @ts-expect-error
                     .insert({code: 'admin'})
             },
-            1: async ()=>{
-                await knex.schema()
-                    .alterTable('_invite', (table) => {
-                        table.integer('created_by')
-                        table.foreign('created_by', 'fk_user_id').references('_root_user.id')
-                    })
-
-                    await knex.query('_invite')
-                    // @ts-expect-error
-                    .update({created_by: 1})
-            },
         })
-
         return migrations
     }
 }

@@ -14,7 +14,7 @@ export default class extends Tables {
                 await knex.schema().createTable('_device', (table) => {
                     table.increments('id').primary()
                     table.integer('user_id').notNullable()
-                    table.foreign('user_id', 'fk_user_id').references('_root_user.id')
+                    table.foreign('user_id', 'fk_user_id').references('user.id')
                     table.string('name')
                     table.uuid('uuid').notNullable()
                     table.string('ip').notNullable()
