@@ -1,0 +1,11 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Generate-Changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Changelog Builder
+        uses: mikepenz/release-changelog-builder-action@v5
