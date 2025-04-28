@@ -15,13 +15,11 @@ const knex = Knex({
     connection: {
         filename: `${import.meta.dirname}/../data/db.sqlite`
     },
-
     pool: {
         afterCreate: (con: any, cb: any) => {
            con.run('PRAGMA foreign_keys = ON', cb)
         },
     },
-
     /**
      * `_<name>_<table>` => selects `_<name>_<table>`
      * `_<table>`        => selects `_<prefix>_<table>`

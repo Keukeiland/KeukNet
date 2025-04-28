@@ -20,13 +20,14 @@ export default class extends Tables {
                         table.integer('user_id')
                         table.foreign('user_id', 'fk_user_id').references('user.id')
                         table.integer('created_by')
-                        table.foreign('created_by', 'fk_user_id').references('user.id')
+                        table.foreign('created_by', 'fk_created_by').references('user.id')
                     })
                 await knex.query('_invite')
                     // @ts-expect-error
                     .insert({code: 'admin'})
             },
         })
+        
         return migrations
     }
 }
