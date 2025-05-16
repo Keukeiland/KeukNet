@@ -1,13 +1,9 @@
 import http2 from 'http2'
 import http1, { IncomingMessage, RequestListener, ServerResponse } from 'http'
 import Knex from 'knex'
-import dotenv from 'dotenv'
 import {cookie, config, Log } from './modules.ts'
 import * as modules from './modules.ts'
 import Handle from './handle.ts'
-
-// enable use of dotenv
-dotenv.config()
 
 // init database
 const knex = Knex({
