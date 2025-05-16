@@ -6,19 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
-    "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts",
-    "dev-wsl": "npx tsx watch --exclude './data/**/*' --clear-screen=false ./src/index.ts"
+    "dev": "sudo tsx watch --exclude './data/**/*' --clear-screen=false --env-file=.env ./src/index.ts",
+    "dev-wsl": "npx tsx watch --exclude './data/**/*' --clear-screen=false --env-file=.env ./src/index.ts"
   },
   "author": "Keukeiland, Fizitzfux",
   "license": "MPL-2.0",
-  "dependencies": {
-    "cookie": "^1.0.2",
-    "dotenv": "^16.4.5",
-    "knex": "^3.1.0",
-    "nunjucks": "^3.2.4",
-    "sqlite3": "^5.1.6",
-    "typescript": "^5.7.3"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/keukeiland/keuknet.git"
@@ -27,6 +19,17 @@
     "url": "https://github.com/keukeiland/keuknet/issues"
   },
   "homepage": "https://keuk.net/",
+  "engineStrict": true,
+  "engines": {
+    "node": "^23"
+  },
+  "dependencies": {
+    "cookie": "^1.0.2",
+    "knex": "^3.1.0",
+    "nunjucks": "^3.2.4",
+    "sqlite3": "^5.1.6",
+    "typescript": "^5.7.3"
+  },
   "devDependencies": {
     "@types/cookie": "^0.6.0",
     "@types/knex": "^0.15.2",
