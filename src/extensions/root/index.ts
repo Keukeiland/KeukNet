@@ -56,7 +56,7 @@ export default class extends ExtensionBase implements RootExtension {
                 if (!ctx.context.user) {
                     // Attempt
                     if (ctx.data) {
-                        let form = ctx.data.form
+                        let form: {login?: string, register?: string, username?: string, password?: string} = ctx.data.form
                         // Login
                         if (form.login) {
                             let auth = '';
@@ -67,25 +67,6 @@ export default class extends ExtensionBase implements RootExtension {
                                 "Location": "/login",
                                 "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
                             })
-                        }
-                        // Register
-                        else if (form.register) {
-                            this.addUser(form.username, form.password, (err?: Error) => {
-                                // if invalid credentials
-                                if (err) {
-                                    ctx.context.auth_err = err
-                                    return this.return_html(ctx, 'login')
-                                }
-                                // success
-                                else {
-                                    let auth = Buffer.from(form.username+":"+form.password).toString('base64')
-                                    return this.return_html(ctx, 'login', undefined, 500, 303, {
-                                        "Location": "/",
-                                        "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
-                                    })
-                                }
-                            })
-                            return
                         }
                     }
                     // First load
@@ -181,17 +162,17 @@ export default class extends ExtensionBase implements RootExtension {
             else
                 return new Error('Wrong name or password')
         }
-        else if (ip.startsWith(subnet)) {
-            // Try using IP-address if no name and password
-            const user = await knex
-                .query({u: 'user', p: '_profile_device'})
-                .select<User>('u.*')
-                .join('_profile_device', 'u.id', '=', 'p.user_id')
-                .where('p.ip', ip)
-                .first()
+        // else if (ip.startsWith(subnet)) {
+        //     // Try using IP-address if no name and password
+        //     const user = await knex
+        //         .query({u: 'user', p: '_profile_device'})
+        //         .select<User>('u.*')
+        //         .join('_profile_device', 'u.id', '=', 'p.user_id')
+        //         .where('p.ip', ip)
+        //         .first()
 
-            return user
-        }
+        //     return user
+        // }
     }
 
     private decrypt_auth(auth: BasicAuth): [name: string, password: string] | Error {

@@ -1,0 +1,42 @@
+form{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5%;
+}
+
+td{
+    padding: 5px;
+}
+
+.form-button,
+.form-button:visited {
+    all: unset;
+    background-color: rgb(221, 221, 221);
+    padding: 5px 10px;
+    border-radius: var(--margin-small);
+    display: inline-block;
+    width: fit-content;
+    height: 16px;
+    font-size: 15px;
+    box-shadow: 0 0 2px black;
+    text-decoration: none;
+    color: black;
+    margin-left: 2px;
+    box-sizing: content-box;
+    cursor: pointer;
+}
+
+.form-button:hover {
+    background-color: darkgrey;
+}
+
+form input {
+    background-color: silver;
+    border-radius: 5px;
+    border: solid 2px darkgrey;
+    outline: none;
+}
+form input:focus {
+    background-color: rgb(221, 221, 221);
+}

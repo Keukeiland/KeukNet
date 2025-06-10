@@ -14,11 +14,9 @@
     </head>
 
     <body>
-        {% include "includes/header.html" %}
-
         <section class="main">
-            {% include "includes/extensions.html" %}
-            <section class="content">
+            {% include "includes/sidebar.html" %}
+            <section class="content" id="content">
                 {% block body %}
                 {% endblock %}
             </section>

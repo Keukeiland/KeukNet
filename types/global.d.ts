@@ -44,7 +44,7 @@ declare type User = {
     id: number,
     name: string,
     password: string,
-    regdate: Date,
+    registration_date: Date,
     is_admin: boolean,
     pfp_code: string
 }

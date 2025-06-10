@@ -1,0 +1,24 @@
+
+table {
+    margin: var(--margin-normal);
+    padding-bottom: 10px;
+    text-align: center;
+    font-size: smaller;
+}
+
+table th, td{
+    border: 1px solid;
+    padding: 10px;
+}
+
+.used{
+    color: #a5a5a5;
+    font-style: italic;
+    font-weight: lighter;
+}
+
+@media (max-width: 550px) {
+    table {
+        margin: var(--margin-normal) auto;
+    }
+}

@@ -1,19 +1,20 @@
 import http2 from 'http2'
-import http1, { IncomingMessage, ServerResponse } from 'http'
+import http1, { IncomingMessage, RequestListener, ServerResponse } from 'http'
 import Knex from 'knex'
-import dotenv from 'dotenv'
 import {cookie, config, Log } from './modules.ts'
 import * as modules from './modules.ts'
 import Handle from './handle.ts'
-
-// enable use of dotenv
-dotenv.config()
 
 // init database
 const knex = Knex({
     client: 'sqlite3',
     connection: {
         filename: `${import.meta.dirname}/../data/db.sqlite`
+    },
+    pool: {
+        afterCreate: (con: any, cb: any) => {
+           con.run('PRAGMA foreign_keys = ON', cb)
+        },
     },
     /**
      * `_<name>_<table>` => selects `_<name>_<table>`
@@ -199,7 +200,7 @@ async function startServer(http_enabled: boolean, https_enabled: boolean) {
     if (http_enabled) {
         // Start server
         http1.createServer(
-            https_enabled ? httpsRedirect : requestListenerCompat
+            https_enabled ? httpsRedirect : requestListener as unknown as RequestListener
         ).listen(
             config.http_port,
             config.host,
