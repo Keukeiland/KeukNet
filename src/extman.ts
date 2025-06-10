@@ -1,30 +1,61 @@
 import { exec } from "child_process"
 import { existsSync } from "fs"
-import { Knex } from "knex"
 
-export async function load(modules: any, namespace: string, knex: Knex): Promise<unknown> {
-    let context: InitContext = {
-        modules,
+export async function load(namespace: string) {
+    const context: InitContext = {
         path: `${import.meta.dirname}/extensions/${namespace}/`,
         data_path: `${import.meta.dirname}/../data/${namespace}/`,
         name: namespace,
-        knex,
+        db_path: `${import.meta.dirname}/../data/db.sqlite`,
     }
-    
+
     if (existsSync(`${context.path}package.json`)) {
         await new Promise((resolve) => {
             exec('npm install', {cwd: context.path}, resolve)
         })
     }
 
-    let ext = new (await import(`./extensions/${namespace}/index`)).default as Extension
-    if (ext.disabled)
-        return null
-    
-    let status = ext.init(context)
+    return {
+        lib: async () => {
+            let path: string | null = null
+            if (existsSync(`${context.path}lib.ts`) || existsSync(`${context.path}lib.js`)) {
+                path = `${context.path}lib`
+            }
+            else if (existsSync(`${context.path}lib/index.ts`) || existsSync(`${context.path}lib/index.js`)) {
+                path = `${context.path}lib/index`
+            }
+            else {
+                return null
+            }
+        
+            let lib_class = (await import(path))?.default
+            return lib_class
+        },
+        main: async (libs: ReadonlyMap<string, any>): Promise<Extension | null> => {
+            let path: string | null = null
+            if (existsSync(`${context.path}index.ts`) || existsSync(`${context.path}index.js`)) {
+                path = `${context.path}index`
+            }
+            else {
+                return null
+            }
 
-    if (status instanceof Promise)
-        await status.catch(err => console.error(`Failed initializing [${namespace}]: ${err}`))
+            let ext_class = (await import(path))?.default
+            if (!ext_class) {
+                return null
+            }
 
-    return ext
+            let ext = new ext_class()
+            if (ext.disabled) {
+                return null
+            }
+            
+            let status = ext.init(context, libs)
+        
+            if (status instanceof Promise)
+                await status.catch(err => console.error(`Failed initializing [${namespace}]: ${err}`))
+        
+            return ext
+        },
+    }
 }

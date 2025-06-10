@@ -1,10 +1,15 @@
-import { ExtensionBase } from "../../modules.ts"
+import { ExtensionBase } from "../../classes/extension.ts"
+import NJ from "../nj/lib.ts"
 
-export default class extends ExtensionBase {
+type Libraries = {
+    nj: NJ,
+}
+
+export default class extends ExtensionBase<Libraries> {
     override name = 'nothing'
     override title = 'Nothing'
 
     override handle: Extension['handle'] = (ctx) => {
-        this.return_html(ctx, 'index')
+        this.libs.nj.return_html(ctx, 'index')
     }
 }

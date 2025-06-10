@@ -1,25 +1,36 @@
 import crypto from 'crypto'
-import { ExtensionBase, Knex } from '../../modules.ts'
+import { ExtensionBase } from '../../classes/extension.ts'
 import { unpack } from '../../util.ts'
+import Knex from '../knex/lib.ts'
+import NJ from '../nj/lib.ts'
+import HTTP from '../http/lib.ts'
+import config from '../../../config/config.ts'
+import wg_config from '../../../config/wireguard.ts'
 
-export default class extends ExtensionBase {
+type Libraries = {
+    knex: Knex,
+    nj: NJ,
+    http: HTTP,
+}
+
+export default class extends ExtensionBase<Libraries> {
     override name = 'profile'
     override title = 'Network'
     override tables = true
     override disabled = true
     wg: any = null
-    wg_config: any = null
 
 
-    override init: Extension['init'] = async (context) => {
-        let config = context.modules.config
+    override init: Extension['init'] = async (context, libs) => {
+        ExtensionBase.init(this, context, libs)
+
         let data_path = context.data_path
-        this.wg_config = context.modules.wg_config
 
         this.wg = await import('./wireguard.js')
-        this.wg.init(data_path, this.wg_config, config.tmp_dir)
+        this.wg.init(data_path, wg_config, config.tmp_dir)
 
-        return ExtensionBase.init(this, context)
+        // Initialize database tables
+        this.libs.knex;
     }
 
     override requires_login: Extension['requires_login'] = (path) => {
@@ -30,7 +41,7 @@ export default class extends ExtensionBase {
     }
 
     override handle: Extension['handle'] = async (ctx) => {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, nj, http} = this.libs
         var location = ctx.path.shift()
 
         switch (location) {
@@ -42,8 +53,8 @@ export default class extends ExtensionBase {
                     .then(unpack<any[]>)
 
                 ctx.context.profiles = profiles
-                ctx.context.connected_ip = ctx.ip.startsWith(this.wg_config.subnet) ? ctx.ip : false
-                return this.return_html(ctx, 'index', err)
+                ctx.context.connected_ip = ctx.ip.startsWith(wg_config.subnet) ? ctx.ip : false
+                return nj.return_html(ctx, 'index', err)
             }
             case 'delete': {
                 // Check ownership
@@ -94,14 +105,14 @@ export default class extends ExtensionBase {
                         .update({installed: true} as never)
                         .where('uuid', uuid)
                     
-                    return this.return_data(ctx, data, undefined, {"Content-Type": "text/plain charset utf-8", "Content-Disposition": `attachment; filename="keuknet.conf"`})
+                    return http.return_data(ctx, data, undefined, {"Content-Type": "text/plain charset utf-8", "Content-Disposition": `attachment; filename="keuknet.conf"`})
                 })
                 break
             }
             case 'install': {
                 ctx.context.device = ctx.args.get('device')
                 ctx.context.uuid = ctx.args.get('uuid')
-                return this.return_html(ctx, 'install')
+                return nj.return_html(ctx, 'install')
             }
             case 'rename': {
                 if (ctx.data) {
@@ -119,18 +130,18 @@ export default class extends ExtensionBase {
                 }
                 else {
                     ctx.context = {...ctx.context, item:"new name",action:ctx.req.url,destination:"/profile"}
-                    this.return_html(ctx, 'edit')
+                    nj.return_html(ctx, 'edit')
                 }
                 break
             }
             default: {
-                return this.return_file(ctx, location)
+                return http.return_file(ctx, location)
             }
         }
     }
 
     owns = async (user?: User, uuid?: string) => {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex} = this.libs
 
         if (!uuid)
             return false

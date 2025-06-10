@@ -1,7 +1,16 @@
-import { ExtensionBase, Knex } from '../../modules.ts'
+import { ExtensionBase } from '../../classes/extension.ts'
 import { unpack } from '../../util.ts'
+import HTTP from '../http/lib.ts'
+import Knex from '../knex/lib.ts'
+import NJ from '../nj/lib.ts'
 
-export default class extends ExtensionBase {
+type Libraries = {
+    knex: Knex,
+    nj: NJ,
+    http: HTTP,
+}
+
+export default class extends ExtensionBase<Libraries> {
     override name = 'admin'
     override title = 'Admin'
     override admin_only = true
@@ -10,7 +19,7 @@ export default class extends ExtensionBase {
     sortingType = "id"
  
     override handle: Extension['handle'] = async (ctx) => {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, nj, http} = this.libs
         var location = ctx.path.shift()
 
         switch (location) {
@@ -22,7 +31,7 @@ export default class extends ExtensionBase {
                 .then(unpack<User[]>)
 
                 ctx.context.user_info = user_list
-                return this.return_html(ctx, 'index', err)
+                return nj.return_html(ctx, 'index', err)
             }
             case 'toggle_admin':{
                 var id = ctx.args.get("id")
@@ -52,7 +61,7 @@ export default class extends ExtensionBase {
                     return this.return(ctx, undefined, location='/admin')
                 }
                 default: {
-                    return this.return_file(ctx, location)
+                    return http.return_file(ctx, location)
                 }
         }
         

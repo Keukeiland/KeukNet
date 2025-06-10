@@ -1,5 +1,5 @@
-import { MigrationMap, Tables, VersionMap } from '../../classes/tables.ts'
-import { Knex } from '../../modules.ts'
+import { MigrationMap, Tables, VersionMap } from '../knex/tables.ts'
+import type Knex from '../knex/lib.ts'
 
 export default class extends Tables {
     override versions(versions: VersionMap) {

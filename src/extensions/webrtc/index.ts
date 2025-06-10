@@ -1,13 +1,20 @@
-import { ExtensionBase } from "../../modules.js"
+import { ExtensionBase } from "../../classes/extension.ts"
 import fs from "fs"
 import http from "http"
 import https from "https"
 import {Server, Socket} from "socket.io"
+import NJ from "../nj/lib.ts"
+import HTTP from "../http/lib.ts"
+import config from "../../../config/config.ts"
 
+type Libraries = {
+    nj: NJ,
+    http: HTTP,
+}
 type user = {style: string, name: string}
 type data = {channel: string, user?: user, id: string}
 
-export default class extends ExtensionBase {
+export default class extends ExtensionBase<Libraries> {
     override name = 'webrtc'
     override title = 'Voice Chat'
 
@@ -50,21 +57,21 @@ export default class extends ExtensionBase {
     }
     data_store = new this.DataStore(this.channels)
 
-    override init: Extension['init'] = async (context) => {
+    override init: Extension['init'] = async (context, libs) => {
         // Port of Socket.IO server
         const PORT = 8080
         // Port that is sent to clients, can differ for reverse-proxied services
         this.port = 8080
-        this.domain = context.modules.config.domain
+        this.domain = config.domain
 
 
         let server
-        if (context.modules.config.nginx) {
+        if (config.nginx) {
             server = http.createServer(() => {})
         }
         else {
-            let privateKey = fs.readFileSync(context.modules.config.private_key_path, "utf8")
-            let certificate = fs.readFileSync(context.modules.config.server_cert_path, "utf8")
+            let privateKey = fs.readFileSync(config.private_key_path, "utf8")
+            let certificate = fs.readFileSync(config.server_cert_path, "utf8")
             let credentials = { key: privateKey, cert: certificate }
             server = https.createServer(credentials, () => {})
         }
@@ -164,7 +171,7 @@ export default class extends ExtensionBase {
             })
         })
 
-        return ExtensionBase.init(this, context)
+        return ExtensionBase.init(this, context, libs)
     }
 
 
@@ -174,6 +181,7 @@ export default class extends ExtensionBase {
     }
 
     override handle: Extension['handle'] = (ctx) => {
+        const {nj, http} = this.libs
         var location = ctx.path.shift()
 
         switch (location) {
@@ -193,7 +201,7 @@ export default class extends ExtensionBase {
                         return v
                     }
                 })
-                return this.return_html(ctx, 'client')
+                return nj.return_html(ctx, 'client')
             }
             case 'user_channel_event': {
                 const {req, res} = ctx
@@ -236,7 +244,7 @@ export default class extends ExtensionBase {
                 return
             }
             default: {
-                this.return_file(ctx, location)
+                http.return_file(ctx, location)
             }
         }
     }

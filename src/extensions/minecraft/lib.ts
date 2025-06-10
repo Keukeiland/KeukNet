@@ -1,60 +1,68 @@
 import { Rcon } from "rcon-client"
+import { LibraryBase } from "../../classes/library.ts"
 
-function log(...args: any[]) {
-    console.log("[MINECRAFT]:",...args)
-}
+export default class Minecraft extends LibraryBase {
+    is_connected = false
+    
+    rcon = new Rcon({
+        host: '127.0.0.1',
+        port: 25575,
+        password: '1234',
+    })
+    raw = this.rcon
 
-let is_connected = false
+    override init: Library['init'] = () => {
+        this.rcon.on('connect', () => {
+            this.is_connected = true
+            this.log("connected")
+        })
+        this.rcon.on('end', () => {
+            this.is_connected = false
+            this.log("disconnected")
+        })
+        this.rcon.on('error', (err) => {
+            this.log("err: ", err)
+        })
+        this.rcon.on('authenticated', () => {
+            this.log("authenticated")
+        })
+    }
 
-const rcon = new Rcon({
-    host: '127.0.0.1',
-    port: 25575,
-    password: '1234',
-})
-export const raw = rcon
-
-export const send = async (command: string) => {
-    await connected()
-    return rcon.send(command).catch(() => '')
-}
-export const sendRaw = async (buffer: Buffer) => {
-    await connected()
-    return rcon.sendRaw(buffer).catch(() => '')
-}
-
-export const connected = async (): Promise<void> => new Promise((resolve) => {
-    const loop = setInterval(async () => {
-        if (!is_connected) {
-            await rcon.connect().then(
-                () => {
-                    is_connected = true
+    log(...args: any[]) {
+        console.log("[MINECRAFT]:",...args)
+    }
+    
+    
+    async send(command: string) {
+        await this.connected()
+        return this.rcon.send(command).catch(() => '')
+    }
+    async sendRaw(buffer: Buffer) {
+        await this.connected()
+        return this.rcon.sendRaw(buffer).catch(() => '')
+    }
+    
+    async connected() {
+        new Promise<void>((resolve) => {
+            const loop = setInterval(async () => {
+                if (!this.is_connected) {
+                    await this.rcon.connect().then(
+                        () => {
+                            this.is_connected = true
+                            clearInterval(loop)
+                            resolve()
+                        },
+                        (err: Error) => {
+                            this.is_connected = false
+                            // this.log("Failed connecting:", err.message)
+                        }
+                    )
+                }
+                else {
                     clearInterval(loop)
                     resolve()
-                },
-                (err: Error) => {
-                    is_connected = false
-                    log("Failed connecting:", err.message)
                 }
-            )
-        }
-        else {
-            clearInterval(loop)
-            resolve()
-        }
-    }, 5000)
-})
-
-rcon.on('connect', () => {
-    is_connected = true
-    log("connected")
-})
-rcon.on('end', () => {
-    is_connected = false
-    log("disconnected")
-})
-rcon.on('error', (err) => {
-    log("err: ", err)
-})
-rcon.on('authenticated', () => {
-    log("authenticated")
-})
+            }, 5000)
+        })
+    }
+}

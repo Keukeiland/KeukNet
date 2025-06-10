@@ -1,0 +1,8 @@
+{
+  "name": "cookie",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "cookie": "^1.0.2"
+  }
+}

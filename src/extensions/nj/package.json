@@ -1,0 +1,11 @@
+{
+  "name": "nunjucks",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/nunjucks": "^3.2.6"
+  }
+}

@@ -1,9 +1,17 @@
-import { ExtensionBase, Knex } from "../../modules.ts"
+import { ExtensionBase } from "../../classes/extension.ts"
 import { unpack } from "../../util.ts"
+import HTTP from "../http/lib.ts"
+import Knex from "../knex/lib.ts"
+import NJ from "../nj/lib.ts"
 
+type Libraries = {
+    knex: Knex,
+    nj: NJ,
+    http: HTTP,
+}
 type message = {name: any, pfp_code: any, created_at: any, content: any}
 
-export default class extends ExtensionBase {
+export default class extends ExtensionBase<Libraries> {
     override name = 'chat'
     override title = 'Chat'
     override tables = true
@@ -11,7 +19,7 @@ export default class extends ExtensionBase {
     private MessageStore = class {
         onPushListeners: Set<(msg: message) => void> = new Set()
     
-        async push(ctx: Context, content: string, knex : Knex){
+        async push(ctx: Context, content: string, knex: Knex){
             const message: message = {
                 name: ctx.context.user?.name,
                 pfp_code: ctx.context.user?.pfp_code,
@@ -20,7 +28,6 @@ export default class extends ExtensionBase {
             }
             let userID = Number(ctx.context.user?.id)
             await knex.query('_message')
-            // @ts-expect-error
             .insert({user_id: userID, created_at: message.created_at, content: message.content})
 
             this.onPushListeners.forEach((listener) => listener(message))
@@ -28,9 +35,16 @@ export default class extends ExtensionBase {
     }
     message_store = new this.MessageStore()
 
+    override init: Extension['init'] = (context, libs) => {
+        ExtensionBase.init(this, context, libs)
+
+        // Initialize database tables
+        this.libs.knex;
+    }
+
     override handle: Extension['handle'] = async (ctx) => {
         const location = ctx.path.shift()
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, nj, http} = this.libs
 
         switch (location) {
             case '':
@@ -39,7 +53,7 @@ export default class extends ExtensionBase {
                     const message = ctx.data.form.message.substring(0,255)
                     this.message_store.push(ctx, message, knex)
                 }
-                return this.return_html(ctx, 'index')
+                return nj.return_html(ctx, 'index')
             }
             case 'history': {
                 // Should at some point return history by request
@@ -50,7 +64,7 @@ export default class extends ExtensionBase {
                     .join('user', '_message.user_id', '=', 'user.id')
                     .then(unpack<message[]>)
                 
-                return this.return_data(ctx, JSON.stringify({messages: message_list}))
+                return http.return_data(ctx, JSON.stringify({messages: message_list}))
             }
             case 'new_message_event': {
                 const {req, res} = ctx
@@ -85,7 +99,7 @@ export default class extends ExtensionBase {
                 return
             }
             default: {
-                return this.return_file(ctx, location)
+                return http.return_file(ctx, location)
             }
         }
     }

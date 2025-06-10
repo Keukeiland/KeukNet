@@ -1,49 +1,13 @@
 import http2 from 'http2'
 import http1, { IncomingMessage, RequestListener, ServerResponse } from 'http'
-import Knex from 'knex'
-import {cookie, config, Log } from './modules.ts'
-import * as modules from './modules.ts'
+import config from '../config/config.ts'
+import Log from './modules/log.ts'
+import * as cookie from 'cookie'
 import Handle from './handle.ts'
 
-// init database
-const knex = Knex({
-    client: 'sqlite3',
-    connection: {
-        filename: `${import.meta.dirname}/../data/db.sqlite`
-    },
-    pool: {
-        afterCreate: (con: any, cb: any) => {
-           con.run('PRAGMA foreign_keys = ON', cb)
-        },
-    },
-    /**
-     * `_<name>_<table>` => selects `_<name>_<table>`
-     * `_<table>`        => selects `_<prefix>_<table>`
-     * `<table>`         => selects `<table>`
-     */
-    wrapIdentifier(value, origImpl, queryContext) {
-        if (queryContext !== undefined && 'prefix' in queryContext) {
-            if (value.startsWith('_')) {
-                if (!value.substring(1).includes('_')) {
-                    value = `_${queryContext.prefix}${value}`
-                }
-            }
-        }
-        return origImpl(value)
-    },
-})
-
-// prepare database
-if (!await knex.schema.hasTable('db_table_versions')) {
-    await knex.schema
-        .createTable('db_table_versions', (table) => {
-            table.string('table_id').notNullable().unique()
-            table.integer('version').notNullable().defaultTo(1)
-        })
-}
 // get request handler
-const handle = new Handle(modules)
-handle.init(modules, knex)
+const handle = new Handle()
+handle.init()
 
 // set up logging
 const log = new Log(config.logging)
@@ -51,7 +15,6 @@ const log = new Log(config.logging)
 // handle all requests for both HTTPS and HTTP/2 or HTTP/nginx
 async function requestListener(req: Http2ServerRequest, res: Http2ServerResponse) {
     let ip: Context['ip']
-    let cookies: Context['cookies']
     let args: Context['args'] = new Map<string, string>()
     let path: Context['path']
     let data: Context['data']
@@ -62,7 +25,7 @@ async function requestListener(req: Http2ServerRequest, res: Http2ServerResponse
         ip = process.env.IP || '0.0.0.0'
     }
 
-    cookies = cookie.parse(req.headers.cookie || '')
+    let cookies = cookie.parse(req.headers.cookie || '')
     // get authorization info
     req.headers.authorization ??= cookies.auth
     // get requested host, HTTP/<=1.1 uses host, HTTP/>=2 uses :authority
@@ -132,7 +95,6 @@ async function requestListener(req: Http2ServerRequest, res: Http2ServerResponse
         res,
         path,
         args,
-        cookies,
         ip,
         data,
     }

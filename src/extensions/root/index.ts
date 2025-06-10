@@ -1,10 +1,22 @@
 import crypto from 'crypto'
-import { ExtensionBase, Knex } from "../../modules.ts"
+import { ExtensionBase } from "../../classes/extension.ts"
 import { readdirSync } from "fs"
 import { unpack } from '../../util.ts'
+import NJ from '../nj/lib.ts'
+import HTTP from '../http/lib.ts'
+import Cookie from '../cookie/lib.ts'
+import Knex from '../knex/lib.ts'
+import config from '../../../config/config.ts'
+import Log from '../../modules/log.ts'
 
+type Libraries = {
+    nj: NJ,
+    http: HTTP,
+    cookie: Cookie,
+    knex: Knex,
+}
 
-export default class extends ExtensionBase implements RootExtension {
+export default class extends ExtensionBase<Libraries> implements RootExtension {
     override name = 'root'
     override title = 'Home'
     override tables = true
@@ -12,24 +24,24 @@ export default class extends ExtensionBase implements RootExtension {
     favicons: string[] = []
     favicons_path: string
 
-    ip_scope: string
     salt: string
 
 
-    override init = (context: InitContext) => {
-        let modules = context.modules
+    override init: Extension['init'] = (context, libs) => {
+        ExtensionBase.init(this, context, libs)
+
         let data_path = context.data_path
-        this.ip_scope = context.modules.wg_config.ip_scope
-        this.salt = context.modules.config.salt
+        this.salt = config.salt
 
         this.favicons_path = data_path+'favicons/'
         try {
             this.favicons.push(...readdirSync(this.favicons_path))
         } catch {
-            (new modules.Log as Log).err(`No favicons found in '${this.favicons_path}'`)
+            (new Log).err(`No favicons found in '${this.favicons_path}'`)
         }
 
-        return ExtensionBase.init(this, context)
+        // Initialize database tables
+        this.libs.knex;
     }
 
     override requires_login: Extension['requires_login'] = (path) => {
@@ -41,15 +53,15 @@ export default class extends ExtensionBase implements RootExtension {
 
     override handle: Extension['handle'] = async (ctx) => {
         var location = ctx.path.shift()
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {nj, http, cookie, knex} = this.libs
 
         switch (location) {
             case '':
             case undefined: {
                 if (!ctx.context.user) {
-                    return this.return_text(ctx, 'index')
+                    return nj.return_text(ctx, 'index')
                 }
-                return this.return_html(ctx, 'user')
+                return nj.return_html(ctx, 'user')
             }
             case 'login': {
                 // If user not logged in
@@ -63,15 +75,15 @@ export default class extends ExtensionBase implements RootExtension {
                             if (form.username && form.password) {
                                 auth = Buffer.from(form.username+":"+form.password).toString('base64')
                             }
-                            return this.return_html(ctx, 'login', undefined, 500, 303, {
+                            return nj.return_html(ctx, 'login', undefined, 500, 303, {
                                 "Location": "/login",
-                                "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
+                                "Set-Cookie": cookie.set('auth', 'Basic '+auth, true)
                             })
                         }
                     }
                     // First load
-                    return this.return_html(ctx, 'login', undefined, 500, 200, {
-                        "Set-Cookie": this.del_cookie('auth')
+                    return nj.return_html(ctx, 'login', undefined, 500, 200, {
+                        "Set-Cookie": cookie.delete('auth')
                     })
                 }
                 // if logged in
@@ -84,7 +96,7 @@ export default class extends ExtensionBase implements RootExtension {
                     // log user out and redirect
                     ctx.res.writeHead(307, {
                         "Location": "/",
-                        "Set-Cookie": this.del_cookie('auth')
+                        "Set-Cookie": cookie.delete('auth')
                     })
                     ctx.res.end()
                     return
@@ -118,7 +130,7 @@ export default class extends ExtensionBase implements RootExtension {
                                 return
                             }
                             else
-                                return this.return_html(ctx, 'pfp')
+                                return nj.return_html(ctx, 'pfp')
                         }
                     }
                 }
@@ -127,19 +139,19 @@ export default class extends ExtensionBase implements RootExtension {
             default: {
                 // Templated html
                 if (location.startsWith('~'))
-                    return this.return_html(ctx, 'content/'+location.split('~')[1], undefined, 404)
+                    return nj.return_html(ctx, 'content/'+location.split('~')[1], undefined, 404)
                 // Favicon
                 else if (this.favicons.includes(location))
-                    return this.return_file(ctx, this.favicons_path+location)
+                    return http.return_file(ctx, this.favicons_path+location)
                 // File
                 else
-                    return this.return_file(ctx, location)
+                    return http.return_file(ctx, location)
             }
         }
     }
 
     authenticate: RootExtension['authenticate'] = async (auth, ip, subnet) => {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex} = this.libs
 
         if (auth) {
             // Try to get name and password
@@ -196,7 +208,7 @@ export default class extends ExtensionBase implements RootExtension {
     }
     
     addUser(name: User['name'], password: User['password'], callback: (err?: Error) => void) {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        let {knex} = this.libs
 
         password = this.hash_pw(password)
         // Check if username is already taken
@@ -205,14 +217,13 @@ export default class extends ExtensionBase implements RootExtension {
             if (exists) return callback(new Error("Username already taken"))
             // add user to db
             knex.query('user')
-                // @ts-expect-error
                 .insert({name, password, pfp_code: `seed=${name}`})
                 .then(() => callback(), (err) => callback(err))
         })
     }
 
     private exists(name: User['name'], callback: (exists: boolean, err?: Error) => void): void {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        let {knex} = this.libs
 
         // check if name already exists
         knex.query('user')

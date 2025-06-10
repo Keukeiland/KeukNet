@@ -1,7 +1,7 @@
-export default class implements Log {
-    we_logging = false;
+export default class Log {
+    we_logging: boolean
 
-    constructor(we_log: boolean) {
+    constructor(we_log: boolean = false) {
         this.we_logging = we_log
     }
 

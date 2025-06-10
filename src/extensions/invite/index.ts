@@ -1,19 +1,23 @@
 import crypto from 'crypto'
-import { ExtensionBase, Knex } from '../../modules.ts'
+import { ExtensionBase } from '../../classes/extension.ts'
 import { unpack } from '../../util.ts'
-import minecraft from '../minecraft/index.ts'
+import Knex from '../knex/lib.ts'
+import NJ from '../nj/lib.ts'
+import Cookie from '../cookie/lib.ts'
+import HTTP from '../http/lib.ts'
+import config from '../../../config/config.ts'
 
-export default class extends ExtensionBase {
+type Libraries = {
+    knex: Knex,
+    nj: NJ,
+    cookie: Cookie,
+    http: HTTP,
+}
+
+export default class extends ExtensionBase<Libraries> {
     override name = 'invite'
     override title = 'Invite'
     override tables = true
-
-    salt: string
-
-    override init = (context: InitContext) => {
-        this.salt = context.modules.config.salt
-        return ExtensionBase.init(this, context)
-    }
 
     override requires_login: Extension['requires_login'] = (path) => {
         if (['register', 'create_acc', 'register.css'].includes(path.at(0)??'')) {
@@ -22,8 +26,15 @@ export default class extends ExtensionBase {
         return true
     }
 
+    override init: Extension['init'] = (context, libs) => {
+        ExtensionBase.init(this, context, libs)
+        
+        // Initialize database tables
+        this.libs.knex;
+    }
+
     override handle: Extension['handle'] = async (ctx) => {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, nj, cookie, http} = this.libs
         let location = ctx.path.shift()
         
         switch (location) {
@@ -38,7 +49,7 @@ export default class extends ExtensionBase {
                     .then(unpack<string[]>)
 
                     ctx.context.invite_links = invite_links
-                    return this.return_html(ctx, 'index')
+                    return nj.return_html(ctx, 'index')
                 }else
                 {
                     let [invite_links, err] = await knex
@@ -48,7 +59,7 @@ export default class extends ExtensionBase {
                     .then(unpack<string[]>)
 
                     ctx.context.invite_links = invite_links
-                    return this.return_html(ctx, 'index')
+                    return nj.return_html(ctx, 'index')
                 }
             }
             case 'create':{
@@ -61,7 +72,6 @@ export default class extends ExtensionBase {
                 
                 let code =  random_chars
                 await knex.query('_invite')
-                // @ts-expect-error
                 .insert({code: code, created_by: ctx.context.user?.id})
 
                 return this.return(ctx, undefined, location='/invite')
@@ -73,8 +83,8 @@ export default class extends ExtensionBase {
 
                 if (await this.inviteCodeValid(invite_code)){
                     ctx.context.invite_code = invite_code
-                    return this.return_html(ctx, 'register', undefined, 500, 200, {
-                        "Set-Cookie": this.del_cookie('auth')
+                    return nj.return_html(ctx, 'register', undefined, 500, 200, {
+                        "Set-Cookie": cookie.delete('auth')
                     })
                 }
                 return this.return(ctx, undefined, "/")
@@ -91,14 +101,13 @@ export default class extends ExtensionBase {
                             // if invalid credentials
                             if (err) {
                                 ctx.context.auth_err = err
-                                return this.return_html(ctx, 'login')
+                                return nj.return_html(ctx, 'login')
                             }
                             // success
                             else {
                                 let auth = Buffer.from(form.username+":"+form.password).toString('base64')
                                 await knex
                                 .query('_invite')
-                                // @ts-expect-error
                                 .update({
                                     used: true,
                                     user_id: id
@@ -109,15 +118,14 @@ export default class extends ExtensionBase {
                                 {
                                     await knex
                                     .query('_minecraft_minecraft')
-                                    // @ts-expect-error
                                     .insert({minecraft_name: form.minecraft_name, user_id: id})
                                     
                                     ;(ctx.context.extensions.get('minecraft') as any)?.update_whitelist()
                                 }
 
-                                return this.return_html(ctx, 'login', undefined, 500, 303, {
+                                return nj.return_html(ctx, 'login', undefined, 500, 303, {
                                     "Location": "/",
-                                    "Set-Cookie": this.set_cookie('auth', 'Basic '+auth, true)
+                                    "Set-Cookie": cookie.set('auth', 'Basic '+auth, true)
                                 })
                             }
                     })
@@ -126,18 +134,18 @@ export default class extends ExtensionBase {
                 return
             }
             default: {
-                    return this.return_file(ctx, location)
-                }
+                return http.return_file(ctx, location)
+            }
         }
         
     }
 
     private hash_pw(password: string): string {
-        return crypto.pbkdf2Sync(password, this.salt, 10000, 128, 'sha512').toString('base64')
+        return crypto.pbkdf2Sync(password, config.salt, 10000, 128, 'sha512').toString('base64')
     }
     
     addUser(name: User['name'], password: User['password'], callback: (id?: number, err?: Error) => void) {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex} = this.libs
 
         password = this.hash_pw(password)
         // Check if username is already taken
@@ -146,7 +154,6 @@ export default class extends ExtensionBase {
             if (exists) return callback(undefined, new Error("Username already taken"))
             // add user to db
             knex.query('user')
-                // @ts-expect-error
                 .insert({name, password, pfp_code: `seed=${name}`})
                 .then((id) => callback(id[0] as unknown as number), (err) => callback(undefined, err))
         })
@@ -155,9 +162,8 @@ export default class extends ExtensionBase {
     async inviteCodeValid(code?: string): Promise<boolean>{
         if (code === undefined)
             return false
-        let [knex]: [Knex] = this.get_dependencies('Knex')
 
-        let [invite, err] = await knex
+        let [invite, err] = await this.libs.knex
             .query('_invite')
             .select<any>('used')
             .where('code', code)
@@ -171,9 +177,8 @@ export default class extends ExtensionBase {
     }
 
     private exists(name: User['name'], callback: (exists: boolean, err?: Error) => void): void {
-        let [knex]: [Knex] = this.get_dependencies('Knex')
         // check if name already exists
-        knex.query('user')
+        this.libs.knex.query('user')
             .select('id')
             .where('name', name)
             .then((value) => {

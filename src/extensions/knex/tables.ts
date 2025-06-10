@@ -1,5 +1,5 @@
 import { Knex as rawKnex } from "knex"
-import { Knex } from "../modules.ts"
+import Knex from "./lib.ts"
 
 export abstract class Tables {
     raw_knex: rawKnex

@@ -1,26 +1,35 @@
-import { ExtensionBase } from "../../modules.js"
-import Knex from "../../modules/knex.ts"
+import { ExtensionBase } from "../../classes/extension.ts"
 import { unpack } from "../../util.ts"
-import * as rcon from "./lib.ts"
+import HTTP from "../http/lib.ts"
+import Knex from "../knex/lib.ts"
+import NJ from "../nj/lib.ts"
+import Minecraft from "./lib.ts"
 
-export default class extends ExtensionBase {
+type Libraries = {
+    knex: Knex,
+    nj: NJ,
+    http: HTTP,
+    minecraft: Minecraft,
+}
+
+export default class extends ExtensionBase<Libraries> {
     override name = 'minecraft'
     override title = 'Minecraft'
     override tables = true
 
-    override init: Extension['init'] = async (context) => {
-        // Init super here as rest of init happens async
-        const result = ExtensionBase.init(this, context)
+    override init: Extension['init'] = async (context, libs) => {
+        ExtensionBase.init(this, context, libs)
 
         // On a separate "thread" in case we can't connect to the RCON server immediately
         setTimeout(this.update_whitelist, 0)
 
-        return result
+        // Initialize database tables
+        this.libs.knex;
     }
 
     override handle: Extension['handle'] = async (ctx) => {
         var location = ctx.path.shift()
-        let [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, nj, http} = this.libs
 
         switch (location) {
             case '':
@@ -36,7 +45,7 @@ export default class extends ExtensionBase {
                     ctx.context.minecraft_username = name.minecraft_name
                 else
                     ctx.context.minecraft_username = ""
-                return this.return_html(ctx, 'index')
+                return nj.return_html(ctx, 'index')
             }
             case 'change':{
                 if (ctx.data)
@@ -55,7 +64,6 @@ export default class extends ExtensionBase {
                     }else{
                         await knex
                         .query('_minecraft')
-                        // @ts-expect-error
                         .insert({minecraft_name: new_MCName, user_id: ctx.context.user?.id})
                     }
 
@@ -66,13 +74,13 @@ export default class extends ExtensionBase {
                 return this.return(ctx, undefined, location='/minecraft')
             }
             default: {
-                return this.return_file(ctx, location)
+                return http.return_file(ctx, location)
             }
         }
     }
 
     update_whitelist = async () => {
-        const [knex]: [Knex] = this.get_dependencies('Knex')
+        const {knex, minecraft: rcon} = this.libs
         const [raw_names, err] = await knex
             .query('_minecraft')
             .select('minecraft_name')
@@ -81,11 +89,11 @@ export default class extends ExtensionBase {
             return
         const names: string[] = (raw_names ?? [])
             // Unpack objects
-            .flatMap((name) => name.minecraft_name)
+            .flatMap((name: {minecraft_name: string}) => name.minecraft_name)
             // Remove empty rows
-            .filter((name) => name != '')
+            .filter((name: string) => name != '')
 
-        const currently_whitelisted_raw = await rcon.send("whitelist list")
+        const currently_whitelisted_raw: string = await rcon.send("whitelist list")
         const currently_whitelisted = currently_whitelisted_raw
             .split(' ')
             // Remove trash
