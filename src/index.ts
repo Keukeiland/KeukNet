@@ -43,7 +43,7 @@ if (!await knex.schema.hasTable('db_table_versions')) {
 }
 // get request handler
 const handle = new Handle(modules)
-handle.init(modules, knex)
+await handle.init(modules, knex)
 
 // set up logging
 const log = new Log(config.logging)
