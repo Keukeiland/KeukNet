@@ -3,7 +3,7 @@ import { ExtensionBase } from '../../classes/extension.ts'
 import { unpack } from '../../util.ts'
 import Knex from '../knex/lib.ts'
 import NJ from '../nj/lib.ts'
-import HTTP from '../http/lib.ts'
+import HTTP from '../http/lib/index.ts'
 import config from '../../../config/config.ts'
 import wg_config from '../../../config/wireguard.ts'
 
@@ -96,7 +96,7 @@ export default class extends ExtensionBase<Libraries> {
                 let uuid = ctx.args.get('uuid')
 
                 // Get config
-                this.wg.getConfig(uuid, async (data: FileData, err: Error) => {
+                this.wg.getConfig(uuid, async (data: string|null, err: Error) => {
                     if (err)
                         return this.return(ctx, new Error(), undefined, 404)
 

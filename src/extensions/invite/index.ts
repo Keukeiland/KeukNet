@@ -4,7 +4,7 @@ import { unpack } from '../../util.ts'
 import Knex from '../knex/lib.ts'
 import NJ from '../nj/lib.ts'
 import Cookie from '../cookie/lib.ts'
-import HTTP from '../http/lib.ts'
+import HTTP from '../http/lib/index.ts'
 import config from '../../../config/config.ts'
 
 type Libraries = {

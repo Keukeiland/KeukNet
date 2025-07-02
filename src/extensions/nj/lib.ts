@@ -35,7 +35,7 @@ export default class NJ extends LibraryBase<Libraries> {
         ctx.context.__render_item = texts.get(item)
         this.self.renderString(
             '{% extends "layout.html" %}{% block body %}{{__render_item |safe}}{% endblock %}',
-            ctx.context, (err: Error | null, data: FileData) => {
+            ctx.context, (err, data) => {
                 if (err) {
                     res.writeHead(500)
                     return res.end()
@@ -62,7 +62,7 @@ export default class NJ extends LibraryBase<Libraries> {
         
         headers = {...Content.types.html, ...headers}
 
-        this.self.render(this.name+'/'+item+'.html', ctx.context, (err: null|Error, data: FileData): void => {
+        this.self.render(this.name+'/'+item+'.html', ctx.context, (err, data) => {
             if (err) {
                 res.writeHead(err_code)
                 res.end()

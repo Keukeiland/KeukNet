@@ -3,7 +3,7 @@ import { ExtensionBase } from "../../classes/extension.ts"
 import { readdirSync } from "fs"
 import { unpack } from '../../util.ts'
 import NJ from '../nj/lib.ts'
-import HTTP from '../http/lib.ts'
+import HTTP from '../http/lib/index.ts'
 import Cookie from '../cookie/lib.ts'
 import Knex from '../knex/lib.ts'
 import config from '../../../config/config.ts'

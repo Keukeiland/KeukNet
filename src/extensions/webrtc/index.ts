@@ -4,7 +4,7 @@ import http from "http"
 import https from "https"
 import {Server, Socket} from "socket.io"
 import NJ from "../nj/lib.ts"
-import HTTP from "../http/lib.ts"
+import HTTP from "../http/lib/index.ts"
 import config from "../../../config/config.ts"
 
 type Libraries = {

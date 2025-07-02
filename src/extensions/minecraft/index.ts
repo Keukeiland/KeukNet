@@ -1,6 +1,6 @@
 import { ExtensionBase } from "../../classes/extension.ts"
 import { unpack } from "../../util.ts"
-import HTTP from "../http/lib.ts"
+import HTTP from "../http/lib/index.ts"
 import Knex from "../knex/lib.ts"
 import NJ from "../nj/lib.ts"
 import Minecraft from "./lib.ts"

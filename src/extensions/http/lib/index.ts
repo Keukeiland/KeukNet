@@ -1,7 +1,7 @@
-import { LibraryBase } from "../../classes/library.ts"
-import Fetch from "../../modules/fetch.ts"
-import { unpack } from "../../util.ts"
-import Content from '../content/lib.ts'
+import { LibraryBase } from "../../../classes/library.ts"
+import Fetch from "./fetch.ts"
+import { unpack } from "../../../util.ts"
+import Content from '../../content/lib.ts'
 
 type Libraries = {
     content: Content,
@@ -13,8 +13,7 @@ export default class HTTP extends LibraryBase<Libraries> {
     override init: Library['init'] = (context, host, libproxy) => {
         LibraryBase.init(this, context, host, libproxy)
 
-        this.fetch = new Fetch()
-        this.fetch.init(context)
+        this.fetch = new Fetch(context)
     }
 
     async return_file(ctx: Context, file: string): Promise<void> {

@@ -3,8 +3,6 @@ declare type Http2ServerResponse = import('http2').Http2ServerResponse
 
 declare type BasicAuth = `Basic ${string}`
 
-declare type FileData = string | null
-
 declare type Context = {
     req: Http2ServerRequest
     res: Http2ServerResponse
@@ -45,12 +43,4 @@ declare type InitContext = {
     data_path: string,
     name: string,
     db_path: string,
-}
-
-declare type ResultStatus = [Okay: false, Error: Error] | [Okay: true]
-
-declare type VariableSizeArray<S, T> = { [K in keyof S]: T }
-
-declare interface Module {
-    init(context: InitContext): ResultStatus
 }

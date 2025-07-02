@@ -1,8 +1,10 @@
 import { readFile } from "fs/promises"
 import * as path from "path"
-import { unpack } from "../util.ts"
+import { unpack } from "../../../util.ts"
 
-export default class implements Module, Fetch {
+type FileData = string | null
+
+export default class Fetch {
     /** File extensions of binary filetypes */
     private readonly binary_file_name_extensions: Set<string> = new Set(['png','jpg','mp3'])
     /** Caches processed files */
@@ -10,12 +12,11 @@ export default class implements Module, Fetch {
     private root: string
 
     
-    init: Module['init'] = (context) => {
+    constructor(context: InitContext) {
         this.root = path.join(context.path, "/static/")
-        return [true]
     }
 
-    file: Fetch['file'] = async (file_path) => {
+    async file(file_path: string): Promise<[FileData, string] | Error> {
         // Ensure path is absolute
         if (!path.isAbsolute(file_path))
             file_path = path.join(this.root, file_path)
