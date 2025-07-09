@@ -71,7 +71,6 @@ function args_to_values(args) {
             option.value = args_map[name];
         };
 
-        console.log(name, "vdyivi", option.value)
         if (name == 'flip' && option.value == 'true') {
             option.checked = true;
         };
