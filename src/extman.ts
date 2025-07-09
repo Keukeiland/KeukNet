@@ -24,7 +24,7 @@ export async function load(modules: any, namespace: string, knex: Knex): Promise
     let status = ext.init(context)
 
     if (status instanceof Promise)
-        status.catch(err => console.error(`Failed initializing [${namespace}]: ${err}`))
+        await status.catch(err => console.error(`Failed initializing [${namespace}]: ${err}`))
 
     return ext
 }

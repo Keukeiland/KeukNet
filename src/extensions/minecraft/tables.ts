@@ -16,7 +16,7 @@ export default class extends Tables {
                         table.increments('id').primary()
                         table.string('minecraft_name').notNullable()
                         table.integer('user_id')
-                        table.foreign('user_id', 'fk_user_id').references('_root_user.id')
+                        table.foreign('user_id', 'fk_user_id').references('user.id')
                     })
             },
         })

@@ -91,6 +91,10 @@
     width: fit-content;
 }
 
+.separator {
+    margin: auto;
+}
+
 
 /* Phones */
 @media (max-width: 700px) {

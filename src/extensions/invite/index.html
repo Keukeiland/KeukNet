@@ -10,9 +10,14 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Code</th>
+            <th>Invite Code</th>
             <th>Created at</th>
-            <th>Used</th>
+            {% if user.is_admin %}
+                <th>Created by</th>
+                <th>Used by</th>
+            {% else %}
+                <th>Used</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -21,7 +26,12 @@
                 <td>{{link.id}}</td>
                 <td>{{link.code}}</td>
                 <td>{{link.created_at}}</td>
-                <td>{{"Yes" if link.used else "No"}}</td>
+                {% if user.is_admin %}
+                    <td>{{link.created_by}}</td>
+                    <td>{{link.used_by if link.used else "Not used"}}</td>
+                {% else %}
+                    <td>{{"Yes" if link.used else "No"}}</td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
