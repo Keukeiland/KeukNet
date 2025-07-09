@@ -71,6 +71,7 @@ function args_to_values(args) {
             option.value = args_map[name];
         };
 
+        console.log(name, "vdyivi", option.value)
         if (name == 'flip' && option.value == 'true') {
             option.checked = true;
         };
@@ -106,7 +107,7 @@ function init() {
             }
             case 'boolean': {
                 input.setAttribute('type', 'checkbox');
-                input.setAttribute('value', 'true');
+                input.setAttribute('value', v.default);
                 break;
             }
             case 'integer': {
