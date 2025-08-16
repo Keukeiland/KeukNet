@@ -1,0 +1,64 @@
+.App {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.TopBar {
+    border: 1px solid black;
+    border-radius: 4px;
+    line-height: 32px;
+    margin-top: var(--margin-normal);
+    margin-right: var(--margin-normal);
+    display: flex;
+}
+
+.StatusIndicator {
+    padding: 0px var(--margin-normal);
+    border-right: 1px dashed black;
+}
+
+.RoomList {
+    display: inline;
+    margin-left: var(--margin-normal);
+}
+.RoomList > ol {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    width: 100%;
+    height: 32px;
+    gap: var(--margin-normal);
+}
+
+.RoomView {
+    border: 1px solid black;
+    border-radius: 4px;
+    margin: var(--margin-normal) var(--margin-normal) var(--margin-normal) 0;
+    padding: var(--margin-normal);
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    max-height: calc(100% - 64px);
+}
+
+.RoomView > .left {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.RoomView > .left > form {
+    background-color: gray;
+}
+.RoomView > .left > .MessageList {
+    height: calc(100% - 32px);
+}
+
+.RoomView > .right {
+    max-width: 250px;
+    border-left: 1px dashed black;
+    margin-left: var(--margin-normal);
+    padding-left: var(--margin-normal);
+    flex-grow: 1;
+}

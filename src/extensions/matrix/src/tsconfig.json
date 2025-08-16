@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "module": "es6",
+        "target": "es5",
+        "allowJs": false,
+        "moduleResolution": "bundler",
+        "diagnostics": false,
+        "alwaysStrict": true,
+        "strict": true,
+        "typeRoots": ["../node_modules/@types"],
+    }
+}

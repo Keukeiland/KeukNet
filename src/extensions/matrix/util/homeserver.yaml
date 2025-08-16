@@ -1,0 +1,22 @@
+server_name: "localhost"
+pid_file: /data/homeserver.pid
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: true
+    resources:
+      - names: [client, federation]
+        compress: false
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+log_config: "/data/localhost.log.config"
+media_store_path: /data/media_store
+registration_shared_secret: "4gu~iN.w0gH1Vqti.&8TxIDRssfzLeq9dW5blMJaKP&1_0YW3w"
+report_stats: false
+macaroon_secret_key: "=isbeFXNm7Yb.6b@fTd5IMRs.xCOMN0t#Izo09U*Ycq5~tDJ+d"
+form_secret: "lR2fDRhK2gQ9SI@kpk5VHnsCLGIU~VspdeDUnE.eZZTMTE6jwf"
+signing_key_path: "/data/localhost.signing.key"
+suppress_key_server_warning: true

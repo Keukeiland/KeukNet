@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "matrix-js-sdk": "^36.2.0"
+    "aberdeen": "^1.0.8",
+    "matrix-js-sdk": "^37.10.0",
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.99.9"
   }
 }
