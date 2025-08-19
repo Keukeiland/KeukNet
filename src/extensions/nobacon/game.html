@@ -1,0 +1,55 @@
+{% extends "extension.html" %}
+
+{% block head %}
+    <link href="/nobacon/game.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block body %}
+    <table>
+        <td>
+            <div id="status">
+                <img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="/nobacon/{{game.name}}/{{game.name}}.png" alt="">
+                <progress id="status-progress"></progress>
+                <div id="status-notice"></div>
+            </div>
+            
+            <canvas id="canvas" width="740px" height="555px">
+                Your browser does not support the canvas tag.
+            </canvas>
+        </td>
+        <td>
+            <button id="back-button"><</button>
+            <button id="fullscreen-button">&#x26F6;</button>
+        </td>
+    </table>
+
+    <!-- Load engine -->
+    <script src="/nobacon/{{game.name}}/{{game.name}}.js"></script>
+    <script>
+        document.getElementById("fullscreen-button").onclick = (e) => {
+            document.getElementById('canvas').requestFullscreen()
+        }
+        document.getElementById("back-button").onclick = (e) => {
+            window.location.href = "/nobacon"
+        }
+
+        // Configure engine
+        var GODOT_CONFIG = {
+            args: [],
+            canvasResizePolicy: 0,
+            ensureCrossOriginIsolationHeaders: true,
+            executable: "/nobacon/{{game.name}}/{{game.name}}",
+            experimentalVK: false,
+            fileSizes: {
+                "{{game.name}}.pck": parseInt("{{game.pack_size}}"),
+                "{{game.name}}.wasm": parseInt("{{game.wasm_size}}")
+            },
+            focusCanvas: true,
+            gdextensionLibs: []
+        };
+        var GODOT_THREADS_ENABLED = false;
+        var engine = new Engine(GODOT_CONFIG);
+    </script>
+    <!-- Load and run game -->
+    <script src="/nobacon/loader.js"></script>
+{% endblock %}

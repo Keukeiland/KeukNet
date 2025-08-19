@@ -1,0 +1,46 @@
+{% extends "extension.html" %}
+
+{% block head %}
+	<style>
+		#content {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			padding-top: var(--margin-normal);
+		}
+		.game {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+			width: 45%;
+			background-color: darkgray;
+			padding: var(--margin-normal) var(--margin-large);
+			border: 1px solid gray;
+			border-radius: 4px;
+			margin-right: var(--margin-normal);
+			margin-bottom: var(--margin-normal);
+			height: max-content;
+			text-decoration: none;
+		}
+		.game:hover {
+			background-color: gray;
+		}
+		.game > p {
+			margin: 0 auto;
+			margin-top: var(--margin-normal);
+			font-size: large;
+			font-weight: bolder;
+			color: black;
+		}
+	</style>
+{% endblock %}
+
+{% block body %}
+	{% for game in games.keys() %}
+		<a href="/nobacon/{{game}}" class="game">
+			<img src="/nobacon/{{game}}/{{game}}.icon.png">
+			<p>{{game}}</p>
+		</a>
+	{% endfor %}
+	<a class="game" style="visibility: hidden;"></a>
+{% endblock %}

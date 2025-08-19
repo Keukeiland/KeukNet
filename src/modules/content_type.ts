@@ -17,4 +17,6 @@ export default ({
     mp3: {"Content-Type": "audio/mpeg", "Cache-Control": "private, max-age=3600"},
     exe: {"Content-Type": "application/vnd.microsoft.portable-executable", "Cache-Control": "private, max-age=3600"},
     py: {"Content-Type": "text/x-python", "Cache-Control": "private, max-age=3600"},
+    wasm: {"Content-Type": "application/wasm"},
+    pck: {"Content-Type": "application/octet-stream"},
 }) as ContentType

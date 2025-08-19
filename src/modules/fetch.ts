@@ -4,7 +4,7 @@ import { unpack } from "../util.ts"
 
 export default class implements Module, Fetch {
     /** File extensions of binary filetypes */
-    private readonly binary_file_name_extensions: Set<string> = new Set(['png','jpg','mp3'])
+    private readonly binary_file_name_extensions: Set<string> = new Set(['png','jpg','mp3','wasm','pck'])
     /** Caches processed files */
     private cache: Map<string, FileData> = new Map()
     private root: string
